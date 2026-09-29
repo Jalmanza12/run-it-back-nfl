@@ -136,6 +136,10 @@
     </div>
     <div class="filters-foot">
       <div class="active-chips" id="active-chips" aria-live="polite"><span class="none">Showing all regular-season games, 2015–2025.</span></div>
+      <button type="button" class="btn btn-outline btn-sm" id="copy-link" title="Copy a link to this exact view">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+        <span>Copy link</span>
+      </button>
       <button type="button" class="btn btn-reset" id="reset">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         Reset filters
@@ -164,10 +168,31 @@
   <!-- ======================================================== CHARTS -->
   <div class="dgrid" id="charts">
     <section class="card panel wide" aria-labelledby="c1-h">
-      <div class="panel-head"><div><h3 id="c1-h">—</h3><div class="sub" id="c1-sub"></div></div><span class="panel-tag">Breakdown</span></div>
+      <div class="panel-head"><div><h3 id="c1-h">—</h3><div class="sub"><span id="c1-sub"></span> <span class="click-hint" id="c1-hint"></span></div></div><span class="panel-tag">Breakdown</span></div>
       <div id="c1-cols" class="chart"></div>
       <div id="c1-rank" class="ranked" hidden></div>
       <p class="note" id="c1-note"></p>
+    </section>
+
+    <section class="card panel wide stadium-panel" aria-labelledby="c6-h">
+      <div class="panel-head">
+        <div><h3 id="c6-h">3D stadium</h3><div class="sub" id="c6-sub">Each column is a team. Height = the selected measure. Drag to orbit · hover for the exact value · click a column to filter to that team.</div></div>
+        <span class="panel-tag">3D view</span>
+      </div>
+      <div class="stadium-tools" role="group" aria-label="3D view controls">
+        <div class="seg seg-sm" role="group" aria-label="Column height scale" id="st-scale">
+          <button type="button" data-v="zero" aria-pressed="true">Heights from zero</button>
+          <button type="button" data-v="zoom" aria-pressed="false">Zoomed (min → max)</button>
+        </div>
+        <button type="button" class="tool" id="st-labels" aria-pressed="true">Values</button>
+        <button type="button" class="tool" id="st-rotate" aria-pressed="false">Auto-rotate</button>
+        <span class="tool-gap"></span>
+        <button type="button" class="tool icon" id="st-zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" class="tool icon" id="st-zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" class="tool" id="st-reset">Reset view</button>
+      </div>
+      <div class="stadium" id="stadium"><div class="loading">Loading 3D stadium…</div></div>
+      <p class="note" id="c6-note">Heights start at zero, so differences between teams look as large as they really are. Switch to <b>Zoomed</b> to stretch the gap between the lowest and highest team. Colours use the same scale as the team map below.</p>
     </section>
 
     <section class="card panel" aria-labelledby="c2-h">
@@ -189,7 +214,7 @@
     </section>
 
     <section class="card panel w5" aria-labelledby="c5-h">
-      <div class="panel-head"><div><h3 id="c5-h">—</h3><div class="sub" id="c5-sub"></div></div><span class="panel-tag">Leaders</span></div>
+      <div class="panel-head"><div><h3 id="c5-h">—</h3><div class="sub"><span id="c5-sub"></span> <span class="click-hint">Click a player to filter.</span></div></div><span class="panel-tag">Leaders</span></div>
       <div id="c5" class="ranked players"></div>
     </section>
   </div>
@@ -207,6 +232,7 @@
   </section>
 </div>
 </main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ============================================================ FOOTER (shared) -->
 <footer class="site-footer">
@@ -233,6 +259,7 @@
   </div>
 </footer>
 
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/" } }</script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/charts.js"></script>

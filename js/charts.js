@@ -238,6 +238,10 @@
         .on("pointerenter pointermove focus", (evt, d) => showTip(evt, tipBody(o.tipTitle ? o.tipTitle(d) : String(d.label),
           o.tipRows ? o.tipRows(d) : [{ value: (o.tipFormat || yf)(d.value), label: o.valueName || "Value", color: col(d), key: "swatch" }])))
         .on("pointerleave blur", hideTip)
+        .on("click", (evt, d) => o.onClick && o.onClick(d))
+        .on("keydown", (evt, d) => { if (o.onClick && (evt.key === "Enter" || evt.key === " ")) { evt.preventDefault(); o.onClick(d); } })
+        .style("cursor", o.onClick ? "pointer" : null)
+        .attr("opacity", (d) => (o.dim && o.dim(d) ? 0.35 : 1))
         .transition(t).attr("d", (d) => barPath(x(d.key) + off, y(0), bw, y(d.value)));
 
       const L = o.labels || "none";
@@ -436,7 +440,11 @@
           row.addEventListener("pointerleave", hideTip);
           row.addEventListener("focus", (e) => row._tip && showTip(e, row._tip()));
           row.addEventListener("blur", hideTip);
+          row.addEventListener("click", () => row._click && row._click());
+          row.addEventListener("keydown", (e) => { if (row._click && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); row._click(); } });
         } else existing.delete(String(r.key));
+        row._click = o.onClick ? () => o.onClick(r) : null;
+        row.classList.toggle("clickable", !!o.onClick);
         row.querySelector(".rk-rank").textContent = o.noRank ? "" : String(i + 1);
         const id = row.querySelector(".rk-id");
         const idKids = [];

@@ -225,3 +225,31 @@ table.data tfoot td { font-weight: 700; background: #f7f8fa; border-top: 1px sol
 .loading { display: grid; place-items: center; min-height: 240px; color: var(--muted); font-size: 14px; }
 .loading::before { content: ""; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--hair-2); border-top-color: var(--red); animation: spin .8s linear infinite; margin-bottom: 10px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ------------------------------------------------------------------ 3D stadium */
+.stadium-panel { padding-bottom: 16px; }
+.stadium-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 12px; }
+.stadium-tools .tool-gap { flex: 1; }
+.seg-sm { width: auto; }
+.seg-sm button { flex: none; padding: 8px 12px; font-size: 12.5px; }
+.tool { font: 600 12.5px/1 var(--font-body); color: var(--ink-2); background: #fff; border: 1.5px solid var(--hair-2); border-radius: 9px; padding: 8px 12px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.tool:hover { border-color: var(--navy-700); color: var(--ink); }
+.tool[aria-pressed="true"] { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
+.tool.icon { width: 34px; padding: 8px 0; font-size: 16px; }
+.stadium { position: relative; height: clamp(360px, 44vw, 540px); border-radius: 12px; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #183257, #0a1628 70%); }
+.stadium canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
+.stadium canvas:active { cursor: grabbing; }
+.stadium .loading { color: #9fb0c8; position: absolute; inset: 0; }
+.stadium .loading::before { border-color: rgba(255, 255, 255, .15); border-top-color: var(--red); }
+.stadium .no-webgl { position: absolute; inset: 0; display: grid; place-items: center; color: #c9d4e3; text-align: center; padding: 24px; font-size: 14px; }
+.stadium-legend { position: absolute; left: 12px; bottom: 12px; display: flex; align-items: center; gap: 8px; background: rgba(10, 22, 40, .72); color: #c9d4e3; font-size: 11.5px; padding: 7px 10px; border-radius: 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.stadium-legend i { width: 110px; height: 7px; border-radius: 4px; background: linear-gradient(90deg, #cde2fb, #86b6ef, #2a78d6, #1c5cab, #0d366b); }
+.stadium-hint { position: absolute; right: 12px; top: 12px; background: rgba(10, 22, 40, .72); color: #c9d4e3; font-size: 11.5px; padding: 6px 10px; border-radius: 8px; pointer-events: none; transition: opacity .5s; }
+.stadium-hint.hide { opacity: 0; }
+@media (max-width: 640px) { .stadium { height: 360px; } .stadium-tools .tool-gap { display: none; } .seg-sm button { padding: 8px 9px; } }
+
+/* click-to-filter hints + toast */
+.click-hint { color: var(--red); font-weight: 600; }
+.click-hint:empty { display: none; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--navy-950); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-2); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 400; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }

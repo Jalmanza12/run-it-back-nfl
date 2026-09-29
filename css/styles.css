@@ -225,6 +225,8 @@ strong { font-weight: 650; }
 .ranked { display: grid; gap: 3px; }
 .rk-row { display: grid; grid-template-columns: 22px minmax(150px, 1.2fr) 2fr 72px; align-items: center; gap: 10px; padding: 3px 6px; border-radius: 8px; transition: background .15s; }
 .rk-row:hover, .rk-row:focus-visible { background: var(--paper); }
+.rk-row.clickable { cursor: pointer; }
+.rk-row.clickable:active { transform: scale(.995); }
 .rk-rank { font: 700 12px/1 var(--font-body); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .rk-id { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .rk-text { display: flex; flex-direction: column; min-width: 0; }

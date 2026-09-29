@@ -56,16 +56,28 @@
         <a class="btn btn-ghost" href="dashboard.html">Explore the dashboard →</a>
       </div>
     </div>
-    <aside class="hero-stat" aria-label="Key statistic">
+    <div class="hero-3d" id="hero-ball" aria-hidden="true">
+      <div class="ball-glow"></div>
+      <p class="ball-hint"><span class="k">Drag</span> to spin · <span class="k">Click</span> to throw</p>
+    </div>
+  </div>
+  <div class="wrap hero-strip" role="list" aria-label="Key statistics">
+    <div class="hs-cell hs-lead" role="listitem">
       <div class="hs-label">Passing yards per team-game</div>
       <div class="hs-big down"><span data-m="f1.pct_change" data-d="1">−13.2</span>%</div>
-      <p class="hs-cap">From <span data-m="f1.first" data-d="1">259.1</span> in <span data-m="meta.first_season">2015</span> to <span data-m="f1.last" data-d="1">224.9</span> in <span data-m="meta.last_season">2025</span>, the lowest of the period (regular season).</p>
+      <p class="hs-cap">From <span data-m="f1.first" data-d="1">259.1</span> in <span data-m="meta.first_season">2015</span> to <span data-m="f1.last" data-d="1">224.9</span> in <span data-m="meta.last_season">2025</span>, the lowest of the period</p>
       <svg class="hero-spark" id="hero-spark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"></svg>
-      <div class="hs-row">
-        <div class="hs-mini"><b class="up">+<span data-m="f5.pct_change" data-d="1">7.6</span>%</b><span>rushing yards per team-game</span></div>
-        <div class="hs-mini"><b><span data-m="f6.share_last" data-d="1">15.2</span>%</b><span>of rushing yards gained by QBs in <span data-m="meta.last_season">2025</span> (<span data-m="f6.share_first" data-d="1">11.8</span>% in <span data-m="meta.first_season">2015</span>)</span></div>
-      </div>
-    </aside>
+    </div>
+    <div class="hs-cell" role="listitem">
+      <div class="hs-label">Rushing yards per team-game</div>
+      <div class="hs-big up">+<span data-m="f5.pct_change" data-d="1">7.6</span>%</div>
+      <p class="hs-cap"><span data-m="f5.first" data-d="1">108.7</span> → <span data-m="f5.last" data-d="1">117.0</span>, as yards per carry climbed</p>
+    </div>
+    <div class="hs-cell" role="listitem">
+      <div class="hs-label">QB share of rushing yards</div>
+      <div class="hs-big"><span data-m="f6.share_last" data-d="1">15.2</span>%</div>
+      <p class="hs-cap">in <span data-m="meta.last_season">2025</span>, up from <span data-m="f6.share_first" data-d="1">11.8</span>% in <span data-m="meta.first_season">2015</span></p>
+    </div>
   </div>
   <a class="scroll-cue" href="#summary">Scroll<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
 </section>
@@ -498,9 +510,15 @@
   </div>
 </footer>
 
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/" } }</script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/report.js"></script>
+<script type="module">
+  import { mountFootball } from "./js/three-football.js";
+  const box = document.getElementById("hero-ball");
+  if (box) window.__heroBall = mountFootball(box);
+</script>
 </body>
 </html>

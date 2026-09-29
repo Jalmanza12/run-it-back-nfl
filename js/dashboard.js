@@ -272,6 +272,7 @@
       ? (st.kind === "rate" ? `Players with at least ${st.minTotal} ${st.denName} in the selection.` : S.measure === "total" ? "" : "Players with at least 8 games with a stat in the selection.")
       : S.dim === "week" ? "Regular-season weeks, then playoff weeks (numbering differs before/after 2021)." : "";
     $("c1-cols").hidden = ranked; $("c1-rank").hidden = !ranked;
+    $("c1-hint").textContent = S.dim === "player" ? "Click a player to filter." : S.dim === "team" ? "Click a team to filter." : CROSS[S.dim] ? "Click a bar to filter." : "";
     if (ranked) {
       const top = S.dim === "player" ? rows.slice(0, 20) : rows;
       const opts = {
@@ -285,6 +286,7 @@
         }),
         format: vf, tipTitle: (r) => r.label,
         tipRows: (r) => [{ value: vf(r.value), label: mName }, { value: fmt(r._r.idx.length), label: "Player-games" }],
+        onClick: S.dim === "opp" ? null : (r) => (S.dim === "player" ? setPlayer(r._r.key) : toggleTeam(r._r.key)),
       };
       charts.c1r ? charts.c1r.update(opts) : (charts.c1r = C.ranked("#c1-rank", opts));
     } else {
@@ -295,10 +297,27 @@
         highlight: new Set(), valueName: mName, height: 330,
         tipRows: (d) => [{ value: vf(d.value), label: mName, color: d.color || NAVY, key: "swatch" }, { value: fmt(d.n), label: "Player-games" }],
         ariaLabel: `Column chart of ${mName} by ${dimLabel(S.dim)}`,
+        onClick: CROSS[S.dim] ? (d) => { CROSS[S.dim](d.key); update(); } : null,
       };
       charts.c1 ? charts.c1.update(opts) : (charts.c1 = C.columns("#c1-cols", opts));
     }
   }
+  /* click-to-filter: what clicking a bar in each breakdown does (clicking again undoes it) */
+  const CROSS = {
+    season: (k) => { if (S.seasonMin === k && S.seasonMax === k) { S.seasonMin = ds.seasons[0]; S.seasonMax = ds.seasons[ds.seasons.length - 1]; } else { S.seasonMin = S.seasonMax = k; } },
+    pos: (k) => { S.pos = S.pos.size === 1 && S.pos.has(k) ? new Set([0, 1, 2, 3]) : new Set([k]); },
+    conference: (k) => { const c = k === 0 ? "AFC" : "NFC"; S.conf = S.conf === c ? "all" : c; },
+    venue: (k) => { const v = k === 1 ? "home" : "away"; S.venue = S.venue === v ? "all" : v; },
+    stype: (k) => { const v = k === 1 ? "post" : "reg"; S.stype = S.stype === v ? "all" : v; },
+    division: (k) => {
+      const ids = ds.teams.map((t, i) => (ds.divIdx[i] === k ? i : -1)).filter((i) => i >= 0);
+      const same = S.teams.size === ids.length && ids.every((i) => S.teams.has(i));
+      S.teams = same ? new Set() : new Set(ids);
+    },
+  };
+  function toggleTeam(i) { S.teams.has(i) ? S.teams.delete(i) : S.teams.add(i); update(); }
+  function setPlayer(pi) { S.player = S.player === pi ? null : pi; if (S.player === null) $("player-input").value = ""; update(); }
+
   function mainTeam(rowIdx) {
     const cnt = new Map();
     for (const i of rowIdx) cnt.set(ds.c.team[i], (cnt.get(ds.c.team[i]) || 0) + 1);
@@ -366,7 +385,7 @@
           ds.teams.forEach((t, i) => {
             if (t.division !== div) return;
             const tile = el("button", { type: "button", class: "tile" }, teamBadge(t.code, 24), el("b", { text: t.code }), el("span", { class: "tv" }));
-            tile.addEventListener("click", () => { S.teams.has(i) ? S.teams.delete(i) : S.teams.add(i); update(); });
+            tile.addEventListener("click", () => toggleTeam(i));
             tile.addEventListener("pointerenter", (e) => tile._tip && window.RIB.showTip(e, tile._tip()));
             tile.addEventListener("pointermove", window.RIB.moveTip);
             tile.addEventListener("pointerleave", window.RIB.hideTip);
@@ -393,6 +412,62 @@
     });
     $("c4-min").textContent = ext[0] !== undefined ? vf(ext[0]) : "";
     $("c4-max").textContent = ext[1] !== undefined ? vf(ext[1]) : "";
+    // the 3D stadium shows exactly the same values and colour scale
+    stadiumPayload = { values: vals, colorOf: (v) => ramp(norm(v)), format: vf, mName, ext,
+      selected: new Set(S.teams.size < 32 ? S.teams : []) };
+    pushStadium();
+  }
+
+  /* ---------------------------------------------------------------- 3D stadium (lazy-loaded) */
+  let stadium = null, stadiumPayload = null, stadiumLoading = false;
+  function pushStadium() {
+    if (!stadium || !stadiumPayload) return;
+    stadium.update(stadiumPayload);
+    const p = stadiumPayload;
+    $("st-legend-min").textContent = p.ext[0] !== undefined ? p.format(p.ext[0]) : "";
+    $("st-legend-max").textContent = p.ext[1] !== undefined ? p.format(p.ext[1]) : "";
+    $("c6-h").textContent = `3D stadium: ${p.mName} by team`;
+  }
+  function setupStadium() {
+    const box = $("stadium");
+    const load = () => {
+      if (stadiumLoading) return; stadiumLoading = true;
+      import("./field3d.js").then((mod) => {
+        box.replaceChildren();
+        stadium = mod.createField3D(box, {
+          teams: ds.teams, teamColor: (c) => window.RIB.TEAM_COLORS[c] || "#183257", logoUrl: window.RIB.logoUrl,
+          onHover: (i, e, v) => {
+            if (i === null) { window.RIB.hideTip(); return; }
+            const t = ds.teams[i], p = stadiumPayload;
+            window.RIB.showTip(e, tipBody(t.name, [{ value: v === undefined ? "—" : p.format(v), label: p.mName }, { value: t.division, label: "Division" },
+              { value: S.teams.has(i) ? "click to remove" : "click to filter", label: "" }], el("div", { class: "tt-head" }, teamBadge(t.code, 30))));
+          },
+          onClick: (i) => toggleTeam(i),
+          onInteract: () => { const h = box.querySelector(".stadium-hint"); if (h) h.classList.add("hide"); },
+        });
+        if (!stadium) { box.replaceChildren(el("div", { class: "no-webgl", text: "The 3D view needs WebGL, which this browser has turned off. The team map below shows the same numbers." })); return; }
+        box.appendChild(el("div", { class: "stadium-legend" }, el("span", { id: "st-legend-min" }), el("i"), el("span", { id: "st-legend-max" })));
+        box.appendChild(el("div", { class: "stadium-hint", text: "Drag to orbit · click a column" }));
+        window.__stadium = stadium;
+        pushStadium();
+      }).catch((err) => { box.replaceChildren(el("div", { class: "no-webgl", text: "The 3D view could not load (" + err.message + "). The team map below shows the same numbers." })); });
+    };
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((en) => { if (en.some((x) => x.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: "400px" });
+      io.observe(box);
+    } else load();
+    // tools
+    $("st-scale").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      $("st-scale").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      stadium && stadium.setZoomed(b.dataset.v === "zoom");
+    });
+    const toggle = (id, fn) => $(id).addEventListener("click", () => { const on = $(id).getAttribute("aria-pressed") !== "true"; $(id).setAttribute("aria-pressed", String(on)); stadium && fn(on); });
+    toggle("st-labels", (on) => stadium.setLabels(on));
+    toggle("st-rotate", (on) => stadium.setAutoRotate(on));
+    $("st-zoom-in").addEventListener("click", () => stadium && stadium.zoom(0.8));
+    $("st-zoom-out").addEventListener("click", () => stadium && stadium.zoom(1.25));
+    $("st-reset").addEventListener("click", () => stadium && stadium.resetView());
   }
 
   // ---- chart 5: leaders
@@ -410,6 +485,7 @@
       tipHead: (r) => el("div", { class: "tt-head" }, avatar(r._p.name, r._p.img, r._t.split(",")[0]), el("div", null, el("div", { class: "tt-name", text: r._p.name }), el("div", { class: "tt-sub", text: `${r._p.pos} · ${r._t}` }))),
       tipRows: (r) => [{ value: vf(r.value), label: mName }, { value: fmt(r._r.idx.filter((i) => !ds.c.nostat[i]).length), label: "Games with a stat" },
         { value: fmt(Mx.sum(ds, r._r.idx, "scrim_yds")), label: "Scrimmage yds" }, { value: fmt(Mx.sum(ds, r._r.idx, "pass_yds")), label: "Passing yds" }],
+      onClick: (r) => setPlayer(r._r.key),
     };
     charts.c5 ? charts.c5.update(opts) : (charts.c5 = C.ranked("#c5", opts));
   }
@@ -504,9 +580,54 @@
     });
   }
 
+  /* ---------------------------------------------------------------- shareable URL state (#…) */
+  function toHash() {
+    const D = DEFAULTS(), q = new URLSearchParams();
+    if (S.seasonMin !== D.seasonMin || S.seasonMax !== D.seasonMax) q.set("seasons", `${S.seasonMin}-${S.seasonMax}`);
+    if (S.stype !== D.stype) q.set("type", S.stype);
+    if (S.teams.size && S.teams.size < 32) q.set("teams", [...S.teams].map((i) => ds.teams[i].code).join(","));
+    if (S.pos.size < 4) q.set("pos", [...S.pos].sort().map((i) => POS[i]).join(","));
+    if (S.conf !== D.conf) q.set("conf", S.conf);
+    if (S.venue !== D.venue) q.set("venue", S.venue);
+    if (S.player !== null) q.set("player", ds.players[S.player].id);
+    if (S.stat !== D.stat) q.set("stat", S.stat);
+    if (S.measure !== D.measure) q.set("measure", S.measure);
+    if (S.dim !== D.dim) q.set("by", S.dim);
+    const str = q.toString();
+    return str ? "#" + str : "";
+  }
+  function fromHash() {
+    const q = new URLSearchParams(location.hash.slice(1));
+    const first = ds.seasons[0], lastS = ds.seasons[ds.seasons.length - 1];
+    const sea = (q.get("seasons") || "").match(/^(\d{4})-(\d{4})$/);
+    if (sea) { const a = Math.max(first, +sea[1]), b = Math.min(lastS, +sea[2]); if (a <= b) { S.seasonMin = a; S.seasonMax = b; } }
+    if (["reg", "post", "all"].includes(q.get("type"))) S.stype = q.get("type");
+    if (q.get("teams")) S.teams = new Set(q.get("teams").split(",").map((c) => ds.teams.findIndex((t) => t.code === c)).filter((i) => i >= 0));
+    if (q.get("pos")) { const ps = q.get("pos").split(",").map((p) => POS.indexOf(p)).filter((i) => i >= 0); if (ps.length) S.pos = new Set(ps); }
+    if (["AFC", "NFC"].includes(q.get("conf"))) S.conf = q.get("conf");
+    if (["home", "away"].includes(q.get("venue"))) S.venue = q.get("venue");
+    if (q.get("player")) { const i = ds.players.findIndex((p) => p.id === q.get("player")); if (i >= 0) S.player = i; }
+    if (Mx.STAT[q.get("stat")]) S.stat = q.get("stat");
+    if (Mx.validMeasures(S.stat).includes(q.get("measure"))) S.measure = q.get("measure");
+    else if (!Mx.validMeasures(S.stat).includes(S.measure)) S.measure = Mx.validMeasures(S.stat)[0];
+    if (Mx.DIMENSIONS.some((d) => d.id === q.get("by"))) S.dim = q.get("by");
+  }
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+  function setupShare() {
+    $("copy-link").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(location.href); toast("Link to this view copied"); }
+      catch (e) { window.prompt("Copy this link:", location.href); }
+    });
+  }
+
   /* ---------------------------------------------------------------- update loop */
   let raf = 0;
   function update() {
+    const h = toHash();
+    if (h !== location.hash && !(h === "" && location.hash === "")) history.replaceState(null, "", location.pathname + location.search + h);
     syncFilterUI();
     activeChips();
     cancelAnimationFrame(raf);
@@ -523,10 +644,11 @@
     document.querySelector(".dash-badges").replaceChildren(
       el("span", { text: `${fmt(ds.n)} player-games` }), el("span", { text: `${ds.seasons[0]}–${ds.seasons[ds.seasons.length - 1]}` }),
       el("span", { text: `${ds.teams.length} teams` }), el("span", { text: `${fmt(ds.players.length)} players` }));
-    setupControls(); syncMeasureOptions(); setupFilters(); setupTable();
+    fromHash();
+    setupControls(); syncMeasureOptions(); setupFilters(); setupTable(); setupShare(); setupStadium();
     update();
     // expose for QA (analysis/verify-dashboard) — read-only helpers
-    window.__dash = { get state() { return S; }, Metrics: Mx, get ds() { return ds; }, filtersOf };
+    window.__dash = { get state() { return S; }, Metrics: Mx, get ds() { return ds; }, filtersOf, get stadium() { return stadium; } };
     document.documentElement.dataset.ready = "1";
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
