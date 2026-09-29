@@ -1,0 +1,18 @@
+[load] 11 season files, 199,868 rows x 150 columns (identical schemas)
+[M1] removed 236 rows with no player_id (team-level placeholder rows)
+[M2] kept QB/RB/WR/TE: 66,228 of 199,632 player rows (dropped DB 43,559, DL 33,982, LB 32,869, SPEC 12,853, OL 10,141)
+[S2] home_away derived from game_id (historic codes mapped {'OAK': 'LV', 'SD': 'LAC', 'STL': 'LA'}); unresolved: 0
+[S3] derived total_tds, scrimmage_yards, total_yards; [S6] sack_yards = -sack_yards_lost
+[O1] added team_name, conference, division, opponent_conference (current alignment)
+[S7] player_label built; 6 display names shared by >1 player were disambiguated
+[O3] flagged (not removed) 6,530 rows with no offensive stats recorded
+[check] PASS  no duplicate player_id + game_id
+[check] PASS  no missing values
+[check] PASS  32 teams
+[check] PASS  home_away fully resolved
+[check] PASS  completions <= attempts
+[check] PASS  receptions <= targets
+[check] PASS  PPR - standard == receptions
+[check] PASS  rows >= 50,000
+[check] PASS  columns >= 8
+[save] nfl_offense_weekly_2015_2025_clean.csv: 66,228 rows x 40 columns, 13.2 MB
