@@ -55,9 +55,10 @@
 
   const season = (d) => ({ x: d.season, y: d.value });
 
+  const REF = {};
   function charts(M) {
     // 1 — passing yards per team-game
-    C.line("#c-f1", {
+    REF.f1 = C.line("#c-f1", {
       series: [{ key: "pass", label: "Passing yds / team-game", color: NAVY, values: M.f1.pass_ypg.map(season) }],
       yFormat: (v) => fmt(v, 0), tipFormat: (v) => fmt(v, 1), endLabels: true, area: true,
       ariaLabel: "Line chart of passing yards per team-game by season",
@@ -80,14 +81,14 @@
       ariaLabel: "Column chart of sack rate by season",
     });
     // 4 — giveaways
-    C.line("#c-f4", {
+    REF.f4 = C.line("#c-f4", {
       series: [{ key: "give", label: "Giveaways / team-game", color: NAVY, values: M.f4.give_pg.map(season) }],
       yFormat: (v) => fmt(v, 2), endLabels: true, area: true,
       tipFormat: (v) => fmt(v, 2),
       ariaLabel: "Line chart of giveaways per team-game by season",
     });
     // 5 — rushing yards per team-game
-    C.line("#c-f5", {
+    REF.f5 = C.line("#c-f5", {
       series: [{ key: "rush", label: "Rushing yds / team-game", color: "#1c6e47", values: M.f5.rush_ypg.map(season) }],
       yFormat: (v) => fmt(v, 0), tipFormat: (v) => fmt(v, 1), endLabels: true, area: true,
       annotations: [{ x: M.f5.peak_season, y: M.f5.peak, text: `Peak: ${fmt(M.f5.peak, 1)} (${M.f5.peak_season})`, dy: -24 }],
@@ -157,6 +158,192 @@
     });
   }
 
+  /* ---------------------------------------------------------------- metric toggles on findings 1, 4, 5 */
+  function toggles(M) {
+    const f1 = (v) => fmt(v, 1), f2 = (v) => fmt(v, 2), f0 = (v) => fmt(v, 0), pct2 = (v) => fmt(v, 2) + "%";
+    const defs = {
+      f1: [
+        { label: "Pass yds / game", data: M.f1.pass_ypg, fmt: f1, axis: f0, title: "Passing yards per team-game, regular season", sub: "Σ passing yards ÷ team-games played, by season", color: NAVY },
+        { label: "Attempts / game", data: M.f1.att_pg, fmt: f1, axis: f0, title: "Pass attempts per team-game, regular season", sub: "Σ pass attempts ÷ team-games played, by season", color: NAVY },
+        { label: "Yards / attempt", data: M.f1.ypa, fmt: f2, axis: f1, title: "Yards per pass attempt, regular season", sub: "Σ passing yards ÷ Σ pass attempts (efficiency barely moved)", color: "#6b778c" },
+      ],
+      f4: [
+        { label: "Giveaways / game", data: M.f4.give_pg, fmt: f2, axis: f2, title: "Giveaways per team-game, regular season", sub: "(Σ interceptions thrown + Σ fumbles lost) ÷ team-games", color: NAVY },
+        { label: "Interception rate", data: M.f4.int_rate, fmt: pct2, axis: (v) => fmt(v, 1) + "%", title: "Interception rate, regular season", sub: "Σ interceptions ÷ Σ pass attempts", color: NAVY },
+        { label: "Fumbles lost / game", data: M.f4.fum_pg, fmt: f2, axis: f2, title: "Fumbles lost per team-game, regular season", sub: "Σ fumbles lost ÷ team-games", color: NAVY },
+      ],
+      f5: [
+        { label: "Rush yds / game", data: M.f5.rush_ypg, fmt: f1, axis: f0, title: "Rushing yards per team-game, regular season", sub: "Σ rushing yards ÷ team-games played, by season", color: "#1c6e47",
+          annotations: [{ x: M.f5.peak_season, y: M.f5.peak, text: `Peak: ${fmt(M.f5.peak, 1)} (${M.f5.peak_season})`, dy: -24 }] },
+        { label: "Yards / carry", data: M.f5.ypc, fmt: f2, axis: f1, title: "Yards per carry, regular season", sub: "Σ rushing yards ÷ Σ carries", color: "#1c6e47" },
+        { label: "Carries / game", data: M.f5.car_pg, fmt: f1, axis: f0, title: "Carries per team-game, regular season", sub: "Σ carries ÷ team-games (volume barely moved)", color: "#6b778c" },
+        { label: "1,000-yd rushers", data: M.f5.rushers_1000, fmt: f0, axis: f0, title: "Players with 1,000+ rushing yards, regular season", sub: "Count of players; note the 17th game from 2021", color: "#1c6e47" },
+      ],
+    };
+    Object.entries(defs).forEach(([key, list]) => {
+      const box = document.getElementById("tg-" + key);
+      const fig = box.closest("figure"), h4 = fig.querySelector("h4"), sub = fig.querySelector(".chart-sub");
+      const buttons = list.map((d, i) => {
+        const b = el("button", { type: "button", "aria-pressed": String(i === 0), text: d.label });
+        b.addEventListener("click", () => {
+          buttons.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          h4.textContent = d.title; sub.textContent = d.sub;
+          REF[key].update({ series: [{ key: key + i, label: d.label, color: d.color, values: d.data.map(season) }],
+            yFormat: d.axis, tipFormat: d.fmt, labelFormat: d.fmt, annotations: d.annotations || [] });
+        });
+        return b;
+      });
+      box.replaceChildren(...buttons);
+    });
+  }
+
+  /* ---------------------------------------------------------------- head-to-head (finding 9) */
+  function headToHead(M) {
+    const teams = M.f9.teams, byCode = Object.fromEntries(teams.map((t, i) => [t.team, { ...t, rank: i + 1 }]));
+    const maxY = Math.max(...teams.map((t) => t.ypg)), maxT = Math.max(...teams.map((t) => t.tdpg));
+    const A = document.getElementById("h2h-a"), B = document.getElementById("h2h-b");
+    const opts = teams.slice().sort((a, b) => a.name.localeCompare(b.name));
+    [A, B].forEach((sel) => opts.forEach((t) => sel.appendChild(el("option", { value: t.team, text: t.name }))));
+    A.value = M.f9.top; B.value = M.f9.bottom;
+    const body = document.getElementById("h2h-body");
+    function draw() {
+      const a = byCode[A.value], b = byCode[B.value];
+      const rows = [
+        ["Yds / game", a.ypg, b.ypg, (v) => fmt(v, 1), (v) => v / maxY, false],
+        ["TDs / game", a.tdpg, b.tdpg, (v) => fmt(v, 2), (v) => v / maxT, false],
+        ["League rank", a.rank, b.rank, (v) => "#" + v, (v) => (33 - v) / 32, true],
+      ];
+      body.replaceChildren(
+        el("div", { class: "h2h-teams" },
+          el("div", { class: "h2h-team" }, teamBadge(a.team, 34), el("span", { text: a.name })),
+          el("div", { class: "h2h-team" }, teamBadge(b.team, 34), el("span", { text: b.name }))),
+        ...rows.map(([lab, va, vb, f, w, lowerBetter]) => {
+          const aw = lowerBetter ? va < vb : va > vb, bw = lowerBetter ? vb < va : vb > va;
+          return el("div", { class: "h2h-row" },
+            el("span", { class: "v" + (aw ? " win" : ""), text: f(va) }),
+            el("span", { class: "bar l" }, el("i", { class: aw ? "win" : "", style: { width: w(va) * 100 + "%" } })),
+            el("span", { class: "lab", text: lab }),
+            el("span", { class: "bar r" }, el("i", { class: bw ? "win" : "", style: { width: w(vb) * 100 + "%" } })),
+            el("span", { class: "v r" + (bw ? " win" : ""), text: f(vb) }));
+        }),
+        el("p", { class: "h2h-sum", text: a.team === b.team ? "Same team on both sides. Pick another." :
+          `${a.ypg >= b.ypg ? a.name : b.name} gained ${fmt(Math.abs(a.ypg - b.ypg), 1)} more yards per game, about ${fmt(Math.abs(a.ypg - b.ypg) * M.f9.games_per_team, 0)} yards over ${M.f9.games_per_team} games.` }));
+    }
+    A.addEventListener("change", draw); B.addEventListener("change", draw);
+    draw();
+  }
+
+  /* ---------------------------------------------------------------- "Your call": draw the trend */
+  function drawIt(M) {
+    const data = M.f1.pass_ypg, seasons = data.map((d) => d.season), actual = new Map(data.map((d) => [d.season, d.value]));
+    const box = document.getElementById("drawit"), result = document.getElementById("drawit-result");
+    const btnReveal = document.getElementById("drawit-reveal"), btnReset = document.getElementById("drawit-reset");
+    const guess = new Map([[seasons[0], actual.get(seasons[0])]]); // the first season is given
+    let revealed = false, focusIdx = 1, lastIdx = null, drawing = false, animate = false;
+    const svg = d3.select(box).append("svg");
+    const leg = el("ul", { class: "drawit-legend" }, el("li", null, el("i", { class: "dash" }), "Your guess"), el("li", null, el("i"), "Actual"));
+    box.after(leg);
+    let x, y, m = { top: 26, right: 58, bottom: 30, left: 46 };
+
+    function render() {
+      const W = box.clientWidth, H = box.clientHeight;
+      if (!W) return;
+      const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+      svg.attr("width", W).attr("height", H);
+      x = d3.scalePoint().domain(seasons).range([0, iw]).padding(0.2);
+      y = d3.scaleLinear().domain([150, 330]).range([ih, 0]);
+      svg.selectAll("*").remove();
+      const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+      g.append("g").attr("class", "grid").call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""));
+      g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(6).tickSizeOuter(0)).select(".domain").remove();
+      g.append("g").attr("class", "axis").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).tickSizeOuter(0).tickFormat((v) => (iw < 480 ? "’" + String(v).slice(2) : v)).tickValues(seasons.filter((_, i) => iw > 480 || i % 2 === 0 || i === seasons.length - 1)));
+      const z0 = x(seasons[1]) - x.step() / 2;
+      g.append("rect").attr("class", "zone").attr("x", z0).attr("y", 0).attr("width", iw - z0).attr("height", ih);
+      if (guess.size === 1 && !revealed) g.append("text").attr("class", "zone-text").attr("x", z0 + (iw - z0) / 2).attr("y", 26).attr("text-anchor", "middle").text("Draw your guess here →");
+      // your guess
+      const pts = seasons.map((s) => ({ s, v: guess.get(s) }));
+      const ln = d3.line().defined((d) => d.v !== undefined).x((d) => x(d.s)).y((d) => y(d.v)).curve(d3.curveMonotoneX);
+      g.append("path").attr("class", "guess").attr("d", ln(pts));
+      g.selectAll("circle.gd").data(pts.filter((d) => d.v !== undefined && d.s !== seasons[0])).join("circle").attr("class", "guess-dot").attr("r", 4).attr("cx", (d) => x(d.s)).attr("cy", (d) => y(d.v));
+      // given first point
+      g.append("circle").attr("r", 6).attr("cx", x(seasons[0])).attr("cy", y(actual.get(seasons[0]))).attr("fill", "#183257").attr("stroke", "#fff").attr("stroke-width", 2);
+      g.append("text").attr("class", "dl").attr("x", x(seasons[0]) + 8).attr("y", y(actual.get(seasons[0])) - 12).text(fmt(actual.get(seasons[0]), 1));
+      // actual (after reveal)
+      if (revealed) {
+        const a = g.append("path").attr("class", "actual").attr("d", d3.line().x((d) => x(d.season)).y((d) => y(d.value)).curve(d3.curveMonotoneX)(data));
+        if (animate && !window.RIB.reduceMotion) {
+          const L = a.node().getTotalLength();
+          a.attr("stroke-dasharray", `${L} ${L}`).attr("stroke-dashoffset", L).transition().duration(1400).ease(d3.easeCubicOut).attr("stroke-dashoffset", 0);
+        }
+        animate = false;
+        const last = seasons[seasons.length - 1];
+        g.append("circle").attr("r", 5).attr("cx", x(last)).attr("cy", y(actual.get(last))).attr("fill", "#183257").attr("stroke", "#fff").attr("stroke-width", 2);
+        g.append("text").attr("class", "dl").attr("x", x(last) + 9).attr("y", y(actual.get(last)) + 4).text(fmt(actual.get(last), 1));
+        if (guess.has(last)) g.append("text").attr("class", "dl red").attr("x", x(last) + 9).attr("y", y(guess.get(last)) + 4).text(fmt(guess.get(last), 1));
+      }
+      // keyboard cursor
+      if (document.activeElement === box && !revealed) g.append("line").attr("class", "cursor").attr("x1", x(seasons[focusIdx])).attr("x2", x(seasons[focusIdx])).attr("y1", 0).attr("y2", ih);
+      // pointer surface
+      const hit = g.append("rect").attr("width", iw).attr("height", ih).attr("fill", "transparent").style("cursor", revealed ? "default" : "crosshair");
+      hit.on("pointerdown", (e) => { if (revealed) return; drawing = true; lastIdx = null; hit.node().setPointerCapture(e.pointerId); mark(e); })
+        .on("pointermove", (e) => { if (drawing) mark(e); })
+        .on("pointerup pointercancel", () => { drawing = false; lastIdx = null; });
+    }
+    function setGuess(i, v) { guess.set(seasons[i], Math.max(150, Math.min(330, v))); }
+    function mark(e) {
+      const [px, py] = d3.pointer(e, svg.node()).map((v, k) => v - (k ? m.top : m.left));
+      const i = Math.max(1, Math.min(seasons.length - 1, Math.round((px - x(seasons[0])) / x.step())));
+      const v = y.invert(py);
+      if (lastIdx !== null && Math.abs(i - lastIdx) > 1) {   // fill skipped seasons when drawing fast
+        const v0 = guess.get(seasons[lastIdx]), dir = i > lastIdx ? 1 : -1;
+        for (let k = lastIdx + dir; k !== i; k += dir) setGuess(k, v0 + ((v - v0) * (k - lastIdx)) / (i - lastIdx));
+      }
+      setGuess(i, v); lastIdx = i; focusIdx = i;
+      render();
+      if (guess.size === seasons.length) btnReveal.classList.add("pulse");
+    }
+    function reveal() {
+      if (revealed) return;
+      revealed = true; animate = true; render();
+      btnReveal.hidden = true; btnReset.hidden = false; btnReveal.classList.remove("pulse");
+      const guessed = seasons.slice(1).filter((s) => guess.has(s));
+      const last = seasons[seasons.length - 1], a0 = actual.get(seasons[0]), aL = actual.get(last);
+      if (!guessed.length) {
+        result.replaceChildren(el("p", null, `No guess? Here is the answer: passing fell from ${fmt(a0, 1)} to ${fmt(aL, 1)} yards per team-game, a ${fmt(Math.abs(M.f1.pct_change), 1)}% drop.`));
+        return;
+      }
+      const mae = guessed.reduce((t, s) => t + Math.abs(guess.get(s) - actual.get(s)), 0) / guessed.length;
+      const gL = guess.get(last);
+      const verdict = mae < 8 ? "Sharp: within 8 yards a game on average." : mae < 18 ? "Close: you had the general shape." : "Not quite.";
+      result.replaceChildren(
+        el("div", { class: "score" },
+          el("div", null, el("b", { class: "red", text: fmt(mae, 1) }), el("span", { text: "avg. miss (yds/game)" })),
+          gL !== undefined ? el("div", null, el("b", { text: fmt(gL, 1) }), el("span", { text: `your ${last} guess` })) : null,
+          el("div", null, el("b", { text: fmt(aL, 1) }), el("span", { text: `actual ${last}` }))),
+        el("p", null, `${verdict} In reality, passing fell ${fmt(Math.abs(M.f1.pct_change), 1)}% from ${seasons[0]} to ${last}${gL !== undefined ? (gL > a0 ? ", while you drew it going up." : ", and you drew it going down too.") : "."}`));
+    }
+    btnReveal.addEventListener("click", reveal);
+    btnReset.addEventListener("click", () => {
+      [...guess.keys()].forEach((k) => k !== seasons[0] && guess.delete(k));
+      revealed = false; btnReveal.hidden = false; btnReset.hidden = true; result.replaceChildren(); render();
+    });
+    box.addEventListener("keydown", (e) => {
+      if (revealed) return;
+      const cur = guess.get(seasons[focusIdx]) ?? guess.get(seasons[focusIdx - 1]) ?? actual.get(seasons[0]);
+      if (e.key === "ArrowRight") focusIdx = Math.min(seasons.length - 1, focusIdx + 1);
+      else if (e.key === "ArrowLeft") focusIdx = Math.max(1, focusIdx - 1);
+      else if (e.key === "ArrowUp") setGuess(focusIdx, cur + 2);
+      else if (e.key === "ArrowDown") setGuess(focusIdx, cur - 2);
+      else if (e.key === "Enter") { reveal(); return; }
+      else return;
+      e.preventDefault(); render();
+    });
+    box.addEventListener("focus", render); box.addEventListener("blur", render);
+    new ResizeObserver(render).observe(box);
+    render();
+    window.__drawIt = { guess, reveal, get revealed() { return revealed; } };
+  }
+
   /* ---------------------------------------------------------------- "Show the numbers" tables */
   function tableSpecs(M) {
     const s = (arr, k) => Object.fromEntries(arr.map((d) => [d.season, d[k || "value"]]));
@@ -202,6 +389,9 @@
     kpis(M);
     heroSpark(M);
     charts(M);
+    toggles(M);
+    headToHead(M);
+    drawIt(M);
     tables(M);
     document.documentElement.dataset.ready = "1";
   }

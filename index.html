@@ -124,6 +124,30 @@
   </div>
 </nav>
 
+<!-- ============================================================ YOUR CALL (interactive) -->
+<section class="drawit" id="your-call" aria-labelledby="drawit-h">
+  <div class="wrap">
+    <div class="drawit-grid">
+      <div class="drawit-text reveal">
+        <span class="eyebrow">Your call</span>
+        <h2 id="drawit-h">Before you read: draw how you think passing changed</h2>
+        <p>In <span data-m="meta.first_season">2015</span>, NFL teams averaged <span data-m="f1.first" data-d="1">259.1</span> passing yards per game. <strong>Drag across the chart</strong> to sketch where you think that number went over the next ten seasons, then reveal the real line.</p>
+        <p class="drawit-kbd">Keyboard: focus the chart, use ←/→ to pick a season and ↑/↓ to set it, and Enter to reveal.</p>
+        <div class="drawit-actions">
+          <button type="button" class="btn btn-primary" id="drawit-reveal">Show me the real line</button>
+          <button type="button" class="btn btn-outline" id="drawit-reset" hidden>Try again</button>
+        </div>
+        <div class="drawit-result" id="drawit-result" aria-live="polite"></div>
+      </div>
+      <figure class="card chart-card drawit-card reveal" style="margin:0">
+        <h4>Passing yards per team-game, regular season</h4>
+        <p class="chart-sub" id="drawit-sub">Your guess vs. the data</p>
+        <div id="drawit" class="drawit-chart" tabindex="0" role="application" aria-label="Drawing area: guess passing yards per team-game for each season from 2016 to 2025"></div>
+      </figure>
+    </div>
+  </div>
+</section>
+
 <!-- ============================================================ CHAPTER 1 -->
 <div class="chapter"><div class="wrap chapter-head"><h2>I. The air game</h2></div></div>
 
@@ -143,6 +167,7 @@
     <figure class="card chart-card reveal" style="margin:0">
       <h4>Passing yards per team-game, regular season</h4>
       <p class="chart-sub">Σ passing yards ÷ team-games played, by season</p>
+      <div class="mtoggle" id="tg-f1" role="group" aria-label="Choose the metric"></div>
       <div id="c-f1" class="chart"></div>
       <p class="chart-note"><b>Note:</b> y-axis does not start at zero. Passing yards are gross (sack yardage not subtracted).</p>
       <details class="numbers" data-table="f1"><summary>Show the numbers</summary></details>
@@ -211,6 +236,7 @@
     <figure class="card chart-card reveal" style="margin:0">
       <h4>Giveaways per team-game, regular season</h4>
       <p class="chart-sub">(Σ interceptions thrown + Σ fumbles lost) ÷ team-games</p>
+      <div class="mtoggle" id="tg-f4" role="group" aria-label="Choose the metric"></div>
       <div id="c-f4" class="chart"></div>
       <p class="chart-note"><b>Note:</b> y-axis does not start at zero. Fumbles by non-skill players (e.g. linemen, returners listed at other positions) are not in the dataset.</p>
       <details class="numbers" data-table="f4"><summary>Show the numbers</summary></details>
@@ -237,6 +263,7 @@
     <figure class="card chart-card reveal" style="margin:0">
       <h4>Rushing yards per team-game, regular season</h4>
       <p class="chart-sub">Σ rushing yards ÷ team-games played, by season</p>
+      <div class="mtoggle" id="tg-f5" role="group" aria-label="Choose the metric"></div>
       <div id="c-f5" class="chart"></div>
       <p class="chart-note"><b>Note:</b> y-axis does not start at zero.</p>
       <details class="numbers" data-table="f5"><summary>Show the numbers</summary></details>
@@ -329,6 +356,16 @@
         <div><b><span data-m="f9.top_ypg" data-d="1">382.9</span></b><span><span data-m="f9.top">KC</span>, yds / game</span></div>
         <div><b><span data-m="f9.league_ypg" data-d="1">358.5</span></b><span>league average</span></div>
         <div><b class="red"><span data-m="f9.bottom_ypg" data-d="1">320.1</span></b><span><span data-m="f9.bottom">NYJ</span>, yds / game</span></div>
+      </div>
+      <div class="h2h card" id="h2h">
+        <div class="h2h-head"><b>Head-to-head</b><span>Pick any two teams</span></div>
+        <div class="h2h-pick">
+          <label class="sr-only" for="h2h-a">First team</label><select class="h2h-sel" id="h2h-a"></select>
+          <span class="vs">VS</span>
+          <label class="sr-only" for="h2h-b">Second team</label><select class="h2h-sel" id="h2h-b"></select>
+        </div>
+        <div class="h2h-body" id="h2h-body" aria-live="polite"></div>
+        <p class="h2h-note">2015–2025 regular season, per team-game. Same numbers as the chart.</p>
       </div>
     </div>
     <figure class="card chart-card reveal" style="margin:0">
@@ -447,6 +484,8 @@
             <tr><td>Scrimmage yards</td><td>Σ rushing_yards + Σ receiving_yards</td><td>Finding 11; ranking = sort descending</td></tr>
             <tr><td>Completion % / catch rate</td><td>Σ completions ÷ Σ attempts; Σ receptions ÷ Σ targets</td><td>Dashboard</td></tr>
             <tr><td>% change</td><td>(last ÷ first − 1) × 100</td><td>Throughout</td></tr>
+            <tr><td>Draw-it score</td><td>mean of |your guess − actual| over the seasons you drew</td><td>“Your call”; head-to-head gap = yds/game difference × 181 games</td></tr>
+            <tr><td>3D column height</td><td>value ÷ highest team value (from zero); zoomed: (value − min) ÷ (max − min)</td><td>Dashboard 3D stadium; exact values in tooltips and the table</td></tr>
           </tbody>
         </table>
         </div>
@@ -476,7 +515,8 @@
       <ul>
         <li>7 filters with one-click reset</li>
         <li>6 live summary numbers</li>
-        <li>5 interactive charts</li>
+        <li>6 interactive charts, including a 3D stadium</li>
+        <li>Click any bar to filter · shareable links</li>
         <li>Sortable, searchable data table</li>
       </ul>
       <a class="btn btn-primary" href="dashboard.html">Open the dashboard →</a>

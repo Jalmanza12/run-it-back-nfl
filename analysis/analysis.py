@@ -86,6 +86,7 @@ pass_ypg = S["passing_yards"] / tg
 att_pg = S["attempts"] / tg
 M["f1"] = {
     "pass_ypg": series(pass_ypg, 1), "att_pg": series(att_pg, 1),
+    "ypa": series(S["passing_yards"] / S["attempts"], 2),
     "first": r(pass_ypg[FIRST], 1), "last": r(pass_ypg[LAST], 1),
     "pct_change": r((pass_ypg[LAST] / pass_ypg[FIRST] - 1) * 100, 1),
     "att_first": r(att_pg[FIRST], 1), "att_last": r(att_pg[LAST], 1),

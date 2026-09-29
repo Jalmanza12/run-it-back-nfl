@@ -146,6 +146,7 @@ strong { font-weight: 650; }
   transition: transform .15s, background .2s, color .2s, box-shadow .2s, border-color .2s;
 }
 .btn:active { transform: translateY(1px); }
+.btn[hidden] { display: none; }
 .btn-primary { background: var(--red); color: #fff; box-shadow: 0 8px 20px -8px rgba(210, 43, 63, .7); }
 .btn-primary:hover { background: var(--red-dark); color: #fff; }
 .btn-ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .35); }

@@ -120,6 +120,52 @@
     "value": 32.0
    }
   ],
+  "ypa": [
+   {
+    "season": 2015,
+    "value": 7.25
+   },
+   {
+    "season": 2016,
+    "value": 7.15
+   },
+   {
+    "season": 2017,
+    "value": 7.01
+   },
+   {
+    "season": 2018,
+    "value": 7.37
+   },
+   {
+    "season": 2019,
+    "value": 7.22
+   },
+   {
+    "season": 2020,
+    "value": 7.24
+   },
+   {
+    "season": 2021,
+    "value": 7.1
+   },
+   {
+    "season": 2022,
+    "value": 7.03
+   },
+   {
+    "season": 2023,
+    "value": 7.02
+   },
+   {
+    "season": 2024,
+    "value": 7.13
+   },
+   {
+    "season": 2025,
+    "value": 7.02
+   }
+  ],
   "first": 259.1,
   "last": 224.9,
   "pct_change": -13.2,

@@ -46,6 +46,7 @@ let ns = 0; for (const i of all) ns += c.nostat[i]; check("meta.no_stats_rows", 
 /* ---------------- per-season findings */
 R.f1.pass_ypg.forEach((d) => check(`f1.pass_ypg ${d.season}`, M.aggregate(ds, S.get(d.season), "pass_yds", "ptg"), d.value));
 R.f1.att_pg.forEach((d) => check(`f1.att_pg ${d.season}`, M.aggregate(ds, S.get(d.season), "att", "ptg"), d.value));
+R.f1.ypa.forEach((d) => check(`f1.ypa ${d.season}`, M.aggregate(ds, S.get(d.season), "ypa", "rate"), d.value, 2));
 check("f1.ypa_first", M.aggregate(ds, S.get(2015), "ypa", "rate"), R.f1.ypa_first, 2);
 check("f1.ypa_last", M.aggregate(ds, S.get(2025), "ypa", "rate"), R.f1.ypa_last, 2);
 R.f2.games.forEach((d) => {
