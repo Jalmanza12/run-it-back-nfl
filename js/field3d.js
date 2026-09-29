@@ -262,13 +262,18 @@ export function createField3D(container, opts) {
   new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) invalidate(); }).observe(container);
   document.addEventListener("visibilitychange", () => invalidate());
 
+  // narrow (phone) frames need the camera further back so the whole field fits
+  let userMoved = false;
+  controls.addEventListener("start", () => (userMoved = true));
+  const homeFor = (aspect) => HOME.clone().multiplyScalar(aspect < 0.8 ? 1.9 : aspect < 1.2 ? 1.5 : aspect < 1.6 ? 1.15 : 1);
   function resize() {
     const w = container.clientWidth, h = container.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    camera.fov = w / h < 1.1 ? 50 : 36;
+    camera.fov = 36;
     camera.updateProjectionMatrix();
+    if (!userMoved) { camera.position.copy(homeFor(camera.aspect)); controls.update(); }
     invalidate();
   }
   new ResizeObserver(resize).observe(container);
@@ -280,7 +285,7 @@ export function createField3D(container, opts) {
     setLabels(b) { showLabels = b; layout(); },
     setAutoRotate(b) { controls.autoRotate = b && !reduceMotion; invalidate(); },
     zoom(f) { const d = camera.position.clone().sub(controls.target); const len = THREE.MathUtils.clamp(d.length() * f, controls.minDistance, controls.maxDistance); camera.position.copy(controls.target).add(d.setLength(len)); invalidate(); },
-    resetView() { camera.position.copy(HOME); controls.target.set(0, 2, 0); controls.update(); invalidate(); },
+    resetView() { userMoved = false; camera.position.copy(homeFor(camera.aspect)); controls.target.set(0, 2, 0); controls.update(); invalidate(); },
     // QA hook: what the 3D scene is currently showing
     snapshot() { return cols.map((c, i) => ({ code: teams[i].code, value: c.value, target: +c.target.toFixed(3), ring: c.ring.visible })); },
   };

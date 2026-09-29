@@ -34,7 +34,9 @@ function check(name, got, want) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
-  const browser = await puppeteer.launch({ executablePath: CHROME, headless: "new" });
+  // software WebGL so the 3D scenes render in headless Chrome too
+  const browser = await puppeteer.launch({ executablePath: CHROME, headless: "new", protocolTimeout: 120000,
+    args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--ignore-gpu-blocklist"] });
   const page = await browser.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -51,6 +53,29 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("report ranked charts rendered", await page.$$eval("#c-f9 .rk-row", (n) => n.length), 32);
   check("report number tables", await page.$$eval("details.numbers table", (n) => n.length), 11);
   check("report link to dashboard", await page.$eval(".nav-cta", (a) => a.getAttribute("href")), "dashboard.html");
+  // 3D football model
+  await page.waitForFunction(() => document.querySelector("#hero-ball canvas"), { timeout: 30000 });
+  check("hero 3D football canvas mounted", await page.$eval("#hero-ball", (b) => b.classList.contains("is-3d")), true);
+  // metric toggles
+  await page.evaluate(() => document.querySelector("#tg-f1 button:nth-child(2)").click()); await sleep(900);
+  check("f1 toggle: attempts end label", await page.$$eval("#c-f1 text.dlabel", (t) => t.map((x) => x.textContent).pop()), nf(R.f1.att_last, 1));
+  check("f1 toggle: title updates", await page.$eval("#f1 figure h4", (h) => h.textContent), "Pass attempts per team-game, regular season");
+  await page.evaluate(() => document.querySelector("#tg-f5 button:nth-child(2)").click()); await sleep(900);
+  check("f5 toggle: yards per carry end label", await page.$$eval("#c-f5 text.dlabel", (t) => t.map((x) => x.textContent).pop()), nf(R.f5.ypc_last, 2));
+  // head-to-head
+  const h2hVals = () => page.$$eval("#h2h-body .h2h-row .v", (v) => v.map((x) => x.textContent));
+  const kcT = R.f9.teams.find((t) => t.team === R.f9.top), nyj = R.f9.teams.find((t) => t.team === R.f9.bottom);
+  check("h2h default (top vs bottom)", (await h2hVals()).join("|"), [nf(kcT.ypg, 1), nf(nyj.ypg, 1), nf(kcT.tdpg, 2), nf(nyj.tdpg, 2), "#1", "#32"].join("|"));
+  await page.select("#h2h-a", "BUF"); await page.select("#h2h-b", "MIA"); await sleep(100);
+  const buf = R.f9.teams.find((t) => t.team === "BUF"), mia = R.f9.teams.find((t) => t.team === "MIA");
+  check("h2h BUF vs MIA", (await h2hVals()).slice(0, 2).join("|"), nf(buf.ypg, 1) + "|" + nf(mia.ypg, 1));
+  // draw-it: guess a flat line at 259.1, reveal, check the score math
+  await page.evaluate(() => { const d = window.__drawIt; for (let s = 2016; s <= 2025; s++) d.guess.set(s, 259.1); d.reveal(); });
+  await sleep(300);
+  const mae = R.f1.pass_ypg.slice(1).reduce((t, d) => t + Math.abs(259.1 - d.value), 0) / (R.f1.pass_ypg.length - 1);
+  check("draw-it: average miss", await page.$eval("#drawit-result .score b", (b) => b.textContent), nf(mae, 1));
+  check("draw-it: actual 2025 shown", await page.$$eval("#drawit-result .score b", (b) => b.pop().textContent), nf(R.f1.last, 1));
+  check("draw-it: reveal button hidden", await page.$eval("#drawit-reveal", (b) => getComputedStyle(b).display), "none");
 
   /* ------------------------------------------------ dashboard */
   log.push("dashboard.html");
@@ -76,7 +101,45 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("default KPI player-games = regular-season rows", await txt("#k-rows"), nf(R.meta.reg_rows, 0));
   check("default KPI team-games", await txt("#k-tg"), nf(R.meta.reg_team_games, 0));
   check("default chips", await txt("#active-chips"), "Showing all regular-season games, 2015–2025.");
-  check("5 charts present", await page.$$eval("#charts .panel", (n) => n.length), 5);
+  check("6 charts present (incl. 3D stadium)", await page.$$eval("#charts .panel", (n) => n.length), 6);
+  check("default URL has no state", await page.evaluate(() => location.hash), "");
+
+  // 3D stadium: loads lazily, shows the same numbers as the 2D team map and the report
+  await page.evaluate(() => document.getElementById("stadium").scrollIntoView({ block: "center" }));
+  await page.waitForFunction(() => window.__stadium, { timeout: 60000 });
+  const snap = await page.evaluate(() => window.__stadium.snapshot());
+  check("3D stadium: 32 columns", snap.length, 32);
+  R.f9.teams.forEach((t) => check(`3D stadium value ${t.team} (f9)`, nf(snap.find((c) => c.code === t.team).value, 1), nf(t.ypg, 1)));
+  const tileVals = await page.$$eval("#c4 .tile", (ts) => ts.map((t) => [t.querySelector("b").textContent, t.querySelector(".tv").textContent]));
+  check("3D stadium == 2D team map", tileVals.every(([c, v]) => nf(snap.find((x) => x.code === c).value, 1) === v), true);
+  const tallest = snap.reduce((a, b) => (b.target > a.target ? b : a));
+  check("3D tallest column = top team", tallest.code, R.f9.top);
+  await click('#st-scale button[data-v="zoom"]');
+  const z = await page.evaluate(() => window.__stadium.snapshot());
+  check("3D zoomed: lowest team is shortest", z.reduce((a, b) => (b.target < a.target ? b : a)).code, R.f9.bottom);
+  await click('#st-scale button[data-v="zero"]');
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  // click-to-filter from the breakdown chart + shareable URL
+  await setSel("#dim-select", "pos");
+  await page.evaluate(() => { const bars = [...document.querySelectorAll("#c1-cols path.mark")]; bars[0].dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+  await settle();
+  check("click bar QB → position filter", await page.$$eval('#pos-chips [aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()).join(",")), "QB");
+  check("URL carries state", await page.evaluate(() => location.hash), "#pos=QB&by=pos");
+  const shared = await page.evaluate(() => location.href);
+  const qbRows = await txt("#k-rows");
+  await page.goto("about:blank"); await page.goto(shared, { waitUntil: "networkidle0" });
+  await page.waitForFunction(() => document.documentElement.dataset.ready === "1"); await settle();
+  check("shared link restores view", (await txt("#k-rows")) + "|" + (await page.$eval("#dim-select", (s) => s.value)), qbRows + "|pos");
+  await click("#reset");
+  check("reset clears URL", await page.evaluate(() => location.hash), "");
+  // clicking a 3D column / tile sets the team filter and rings it in 3D
+  await page.evaluate(() => [...document.querySelectorAll("#c4 .tile")].find((t) => t.querySelector("b").textContent === "KC").click());
+  await settle();
+  await page.evaluate(() => document.getElementById("stadium").scrollIntoView({ block: "center" }));
+  await page.waitForFunction(() => window.__stadium, { timeout: 60000 }); await settle();
+  check("3D ring on filtered team", (await page.evaluate(() => window.__stadium.snapshot())).filter((c) => c.ring).map((c) => c.code).join(","), "KC");
+  await click("#reset"); await page.evaluate(() => window.scrollTo(0, 0));
 
   // measure + stat switch: passing yards per team-game by season == finding 1
   await setSel("#stat-select", "pass_yds");
@@ -162,7 +225,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("reset: player input cleared", await page.$eval("#player-input", (i) => i.value), "");
   check("reset: season slider", await page.$eval("#season-out", (o) => o.textContent), "2015 – 2025");
   check("reset: controls", await page.evaluate(() => [...["stat-select", "measure-select", "dim-select"]].map((i) => document.getElementById(i).value).join(",")), "off_yds,ptg,season");
-  check("reset: pressed buttons", await page.$$eval('[aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()).join(",")), "Regular,QB,RB,WR,TE,All,All");
+  check("reset: pressed buttons", await page.$$eval('[aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()).join(",")), "Regular,QB,RB,WR,TE,All,All,Heights from zero,Values");
 
   check("no console/page errors", errors.join(" | "), "");
   await browser.close();

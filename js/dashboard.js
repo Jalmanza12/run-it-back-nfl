@@ -443,7 +443,7 @@
               { value: S.teams.has(i) ? "click to remove" : "click to filter", label: "" }], el("div", { class: "tt-head" }, teamBadge(t.code, 30))));
           },
           onClick: (i) => toggleTeam(i),
-          onInteract: () => { const h = box.querySelector(".stadium-hint"); if (h) h.classList.add("hide"); },
+          onInteract: () => { const h = box.querySelector(".stadium-hint"); if (h) h.classList.add("hide"); $("st-rotate").setAttribute("aria-pressed", "false"); },
         });
         if (!stadium) { box.replaceChildren(el("div", { class: "no-webgl", text: "The 3D view needs WebGL, which this browser has turned off. The team map below shows the same numbers." })); return; }
         box.appendChild(el("div", { class: "stadium-legend" }, el("span", { id: "st-legend-min" }), el("i"), el("span", { id: "st-legend-max" })));

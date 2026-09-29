@@ -61,7 +61,9 @@ run-it-back-nfl/
 │   ├── common.js              Shared helpers: nav, number formatting, team logos, headshots, tooltip, animations
 │   ├── charts.js              Reusable D3 chart components (line, columns, stacked, histogram, range plot, ranked bars)
 │   ├── metrics.js             Dashboard calculation layer (stats, measures, filters, breakdowns). Runs in browser AND Node
-│   ├── report.js              Renders index.html from data/report_metrics.json
+│   ├── report.js              Renders index.html from data/report_metrics.json (+ draw-it, toggles, head-to-head)
+│   ├── three-football.js      3D football model (Three.js) for the report hero
+│   ├── field3d.js             3D stadium: team columns on a football field (Three.js), used by the dashboard
 │   └── dashboard.js           Dashboard state, filters, controls and rendering
 ├── data/
 │   ├── nfl_offense_weekly_2015_2025_clean.csv   The cleaned dataset (analysis source of truth)
@@ -75,8 +77,8 @@ run-it-back-nfl/
 │   ├── fetch_headshots.py     Builds data/player_headshots.csv from the nflverse players table
 │   ├── analysis.py            Computes all report metrics + dashboard data + audit report
 │   ├── audit_report.md        Dataset audit, assignment compliance, 14 candidate findings
-│   ├── verify.js              Accuracy check: recomputes every report number with js/metrics.js (594 checks)
-│   └── qa_browser.js          End-to-end QA in headless Chrome: filters, controls, table, reset (73 checks)
+│   ├── verify.js              Accuracy check: recomputes every report number with js/metrics.js (609 checks)
+│   └── qa_browser.js          End-to-end QA in headless Chrome: filters, controls, table, 3D views, reset (124 checks)
 └── assets/
     └── favicon.svg
 ```
@@ -125,13 +127,27 @@ Every number in the text is a `<span data-m="…">` bound to `data/report_metric
 | **Measure control** | Total · Per team-game · Average per player-game · Median per player-game · Rate (rates can only be shown as Σ ÷ Σ; invalid options are disabled) |
 | **Breakdown control** | Season · Week · Team · Position · Conference · Division · Home/away · Season type · Opponent · Player |
 | **KPIs (6)** | Selected measure · Player-games · Players · Team-games · Scrimmage yards · Touchdowns scored |
-| **Charts (5)** | Breakdown (columns, or ranked bars with logos/headshots for team/opponent/player) · Trend by position · Single-game distribution (histogram with median/average) · Team map (32 logo tiles by division, sequential colour, click to filter) · Top-10 players |
+| **Charts (6)** | Breakdown (columns, or ranked bars with logos/headshots for team/opponent/player; click a bar to filter) · **3D stadium** (32 team columns on a 3D field, linked to every filter) · Trend by position · Single-game distribution (histogram with median/average) · Team map (32 logo tiles by division, sequential colour, click to filter) · Top-10 players |
 | **Table** | The numbers behind the breakdown for the current filters: sortable columns, search, pagination, totals row, CSV download |
+
+## 3D & interactive features
+
+| Where | Feature |
+|---|---|
+| Report hero | **3D football**, modelled in code (leather texture, seams, laces). Drag to spin, click to throw a spiral, tilts as you scroll |
+| Report | **"Your call"**: draw your guess of how passing changed from 2016 to 2025, then reveal the real line and your average miss (mouse, touch or keyboard) |
+| Report | **Metric toggles** on findings 1, 4 and 5 (e.g. rush yards/game ↔ yards/carry ↔ carries/game ↔ 1,000-yard rushers) |
+| Report | **Head-to-head**: compare any two teams' yards/game, TDs/game and rank |
+| Dashboard | **3D stadium**: every team as a column on a 3D field with its logo. Height = the selected measure (from zero by default; a clearly labelled "zoomed" mode stretches min→max). Hover for exact values, click to filter, drag to orbit, auto-rotate, zoom, reset view |
+| Dashboard | **Click-to-filter**: click a season, position, conference, division, venue or season-type bar, a team or a player to filter; click again to undo |
+| Dashboard | **Shareable links**: the URL records the current view (`#pos=QB&by=pos`…). **Copy link** puts it on the clipboard; Reset clears it |
+
+The 3D views show the same numbers as the 2D charts and table (checked by `qa_browser.js`). They respect `prefers-reduced-motion`, render only when something changes, and load lazily.
 
 ## Technologies
 
 - **HTML5, CSS3** (custom properties, grid, `prefers-reduced-motion`), **vanilla JavaScript** (no framework, no build step)
-- **[D3.js v7](https://d3js.org/)** for charts (loaded from jsDelivr)
+- **[D3.js v7](https://d3js.org/)** for 2D charts and **[Three.js r186](https://threejs.org/)** for the 3D models (both loaded from jsDelivr; Three.js via an import map)
 - **Google Fonts:** Barlow Condensed (display) and Inter (text/data)
 - **Python 3 + pandas / NumPy** for cleaning and analysis
 - **Node.js** for verification; **puppeteer-core + Chrome** for browser QA (dev only)
@@ -153,7 +169,7 @@ python3 -m http.server 8000
 python3 analysis/clean_nfl.py        # optional: re-download raw nflverse files and rebuild the cleaned CSV
 python3 analysis/fetch_headshots.py  # optional: rebuild player_headshots.csv
 python3 analysis/analysis.py         # rebuild report_metrics.json, dashboard_data.json, audit_report.md
-node analysis/verify.js              # accuracy check — expect "594 checks passed, 0 failed"
+node analysis/verify.js              # accuracy check — expect "609 checks passed, 0 failed"
 ```
 
 **Browser QA** (needs Google Chrome):
@@ -161,14 +177,14 @@ node analysis/verify.js              # accuracy check — expect "594 checks pas
 ```bash
 npm i --no-save puppeteer-core
 python3 -m http.server 8000 &
-node analysis/qa_browser.js http://localhost:8000   # expect "73 passed, 0 failed"
+node analysis/qa_browser.js http://localhost:8000   # expect "124 passed, 0 failed"
 ```
 
 ## Accuracy & reproducibility
 
 1. `analysis.py` (pandas) computes every report statistic from the CSV.
-2. `verify.js` recomputes each of them independently with the dashboard's JavaScript calculation layer (`js/metrics.js`) from `dashboard_data.json`. It also checks all 217 numbers written into `index.html`. **594 checks, 0 failures.**
-3. `qa_browser.js` operates the real dashboard in Chrome: it switches stats, measures and breakdowns, applies each filter, sorts and searches the table, and resets. It compares the numbers on screen with the report. **73 checks, 0 failures.**
+2. `verify.js` recomputes each of them independently with the dashboard's JavaScript calculation layer (`js/metrics.js`) from `dashboard_data.json`. It also checks all 221 numbers written into `index.html`. **609 checks, 0 failures.**
+3. `qa_browser.js` operates the real dashboard in Chrome: it switches stats, measures and breakdowns, applies each filter, clicks bars to filter, sorts and searches the table, opens a shared link, checks all 32 columns of the 3D stadium, plays the draw-it game, and resets. It compares the numbers on screen with the report. **124 checks, 0 failures.**
 
 ## GitHub Pages
 
@@ -179,7 +195,8 @@ The site is static and served from the `main` branch root (`Settings → Pages �
 - **Statistics:** [nflverse-data](https://github.com/nflverse/nflverse-data) (`stats_player` and `players` releases). NFL data belongs to its respective owners.
 - **Team logos:** loaded at display time from ESPN's public logo CDN (`a.espncdn.com`). Logos are trademarks of their teams and are shown for identification only. If a logo fails to load, a coloured badge with the team abbreviation is shown instead.
 - **Player headshots:** URLs from the nflverse players table (hosted by NFL.com), requested as small face-cropped thumbnails. If a headshot is missing or fails, the player's initials are shown.
-- Images are decorative. Every chart, number and table works without them.
+- **3D models:** the football, field, goalposts, stands and team columns are all modelled in code (`js/three-football.js`, `js/field3d.js`). There are no third-party model files, so there are no model licences to track.
+- Images and 3D are decorative or supplementary. Every chart, number and table works without them, and the 3D views fall back to a message if WebGL is off.
 
 ## Disclaimer
 
