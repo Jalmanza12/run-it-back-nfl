@@ -371,7 +371,7 @@
       let kx = 0;
       kg.selectAll("*").remove();
       key.forEach((k) => {
-        if (state.width < 460) k.t = { "Middle 80% of games": "80%", "Middle 50%": "50%", Median: "Median", Average: "Avg" }[k.t] || k.t;
+        if (state.width < 460) k.t = { "Middle 80% of games": "Mid 80%", "Middle 50%": "Mid 50%", Median: "Median", Average: "Avg" }[k.t] || k.t;
         if (k.dot) kg.append("circle").attr("cx", kx + 5).attr("cy", 0).attr("r", 5).attr("fill", "#fff").attr("stroke", INK).attr("stroke-width", 2);
         else kg.append("rect").attr("x", kx).attr("y", -k.h / 2).attr("width", k.w).attr("height", k.h).attr("rx", 1.5).attr("fill", k.t === "Median" ? INK : "#8d97a8");
         const tx = kg.append("text").attr("class", "annot").attr("x", kx + (k.dot ? 14 : k.w + 6)).attr("y", 4).text(k.t);
