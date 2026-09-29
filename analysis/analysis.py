@@ -91,6 +91,9 @@ M["f1"] = {
     "att_first": r(att_pg[FIRST], 1), "att_last": r(att_pg[LAST], 1),
     "peak_season": int(pass_ypg.idxmax()), "peak": r(pass_ypg.max(), 1),
     "low_season": int(pass_ypg.idxmin()), "low": r(pass_ypg.min(), 1),
+    "ypa_first": r(S.loc[FIRST, "passing_yards"] / S.loc[FIRST, "attempts"], 2),
+    "ypa_last": r(S.loc[LAST, "passing_yards"] / S.loc[LAST, "attempts"], 2),
+    "att_pct_change": r((att_pg[LAST] / att_pg[FIRST] - 1) * 100, 1),
 }
 
 # ------------------------------------------------------------------ F2 300-yard passing games
@@ -104,27 +107,28 @@ M["f2"] = {
     "total": int(g300.sum()),
 }
 
-# ------------------------------------------------------------------ F3 rushing
+# ------------------------------------------------------------------ F5 rushing
 rush_ypg = S["rushing_yards"] / tg
 ypc = S["rushing_yards"] / S["carries"]
 car_pg = S["carries"] / tg
 ps = reg.groupby(["season", "player_id"])["rushing_yards"].sum()
 r1000 = (ps >= 1000).groupby("season").sum().reindex(SEASONS, fill_value=0)
-M["f3"] = {
+M["f5"] = {
     "rush_ypg": series(rush_ypg, 1), "ypc": series(ypc, 2), "car_pg": series(car_pg, 1),
     "rushers_1000": [{"season": int(k), "value": int(v)} for k, v in r1000.items()],
     "first": r(rush_ypg[FIRST], 1), "last": r(rush_ypg[LAST], 1),
+    "pct_change": r((rush_ypg[LAST] / rush_ypg[FIRST] - 1) * 100, 1),
     "peak_season": int(rush_ypg.idxmax()), "peak": r(rush_ypg.max(), 1),
     "ypc_first": r(ypc[FIRST], 2), "ypc_last": r(ypc[LAST], 2),
     "car_first": r(car_pg[FIRST], 1), "car_last": r(car_pg[LAST], 1),
     "r1000_first": int(r1000[FIRST]), "r1000_last": int(r1000[LAST]),
 }
 
-# ------------------------------------------------------------------ F4 quarterback rushing
+# ------------------------------------------------------------------ F6 quarterback rushing
 pr = reg.groupby(["season", "position_group"])["rushing_yards"].sum().unstack()
 qb_share = pr["QB"] / pr.sum(axis=1) * 100
 qb_car = reg[reg["position_group"] == "QB"].groupby("season")["carries"].sum()
-M["f4"] = {
+M["f6"] = {
     "qb_share": series(qb_share, 1),
     "qb_yards": [{"season": int(k), "value": int(v)} for k, v in pr["QB"].items()],
     "share_first": r(qb_share[FIRST], 1), "share_last": r(qb_share[LAST], 1),
@@ -135,10 +139,10 @@ M["f4"] = {
     "qb_carries_first": int(qb_car[FIRST]), "qb_carries_last": int(qb_car[LAST]),
 }
 
-# ------------------------------------------------------------------ F5 target share by position
+# ------------------------------------------------------------------ F7 target share by position
 pt = reg.groupby(["season", "position_group"])["targets"].sum().unstack().fillna(0)
 tshare = pt.div(pt.sum(axis=1), axis=0) * 100
-M["f5"] = {
+M["f7"] = {
     "share": [{"season": int(s), **{p: r(tshare.loc[s, p], 1) for p in ["WR", "TE", "RB", "QB"]}}
               for s in SEASONS],
     "te_first": r(tshare.loc[FIRST, "TE"], 1), "te_last": r(tshare.loc[LAST, "TE"], 1),
@@ -150,11 +154,11 @@ M["f5"] = {
     "wr_last": r(tshare.loc[LAST, "WR"], 1),
 }
 
-# ------------------------------------------------------------------ F6 ball security
+# ------------------------------------------------------------------ F4 ball security
 int_rate = S["passing_interceptions"] / S["attempts"] * 100
 fum_pg = S["fumbles_lost"] / tg
 give_pg = (S["passing_interceptions"] + S["fumbles_lost"]) / tg
-M["f6"] = {
+M["f4"] = {
     "int_rate": series(int_rate, 2), "fum_pg": series(fum_pg, 2), "give_pg": series(give_pg, 2),
     "int_first": r(int_rate[FIRST], 2), "int_last": r(int_rate[LAST], 2),
     "fum_first": r(fum_pg[FIRST], 2), "fum_last": r(fum_pg[LAST], 2),
@@ -163,9 +167,9 @@ M["f6"] = {
     "give_low_season": int(give_pg.idxmin()), "give_low": r(give_pg.min(), 2),
 }
 
-# ------------------------------------------------------------------ F7 sacks
+# ------------------------------------------------------------------ F3 sacks
 sack_rate = S["sacks_suffered"] / (S["attempts"] + S["sacks_suffered"]) * 100
-M["f7"] = {
+M["f3"] = {
     "sack_rate": series(sack_rate, 2),
     "first": r(sack_rate[FIRST], 2), "last": r(sack_rate[LAST], 2),
     "peak_season": int(sack_rate.idxmax()), "peak": r(sack_rate.max(), 2),
@@ -246,6 +250,8 @@ for pid, row in pl.iterrows():
                     "per_game": r(row.scr / row.games, 1), "headshot": heads.get(pid)})
 M["f11"] = {"leaders": leaders, "top": leaders[0], "second": leaders[1],
             "top10_rb": sum(1 for l in leaders if l["position"] == "RB"),
+            "top10_te": sum(1 for l in leaders if l["position"] == "TE"),
+            "best_per_game": max(leaders, key=lambda l: l["per_game"]),
             "top10_wr": sum(1 for l in leaders if l["position"] == "WR")}
 
 # ------------------------------------------------------------------ write report metrics
@@ -345,15 +351,15 @@ lines += ["", "## Data-quality notes", "",
 cands = [
     ("Passing yards per team-game fell", f"{M['f1']['first']} -> {M['f1']['last']} ({M['f1']['pct_change']}%)", "Selected (F1)"),
     ("300-yard passing games nearly halved", f"{M['f2']['first']} -> {M['f2']['last']}", "Selected (F2)"),
-    ("Rushing yards per team-game rose", f"{M['f3']['first']} -> {M['f3']['last']}; YPC {M['f3']['ypc_first']} -> {M['f3']['ypc_last']}", "Selected (F3)"),
-    ("QBs took a bigger share of rushing", f"{M['f4']['share_first']}% -> {M['f4']['share_last']}% (peak {M['f4']['peak']}%)", "Selected (F4)"),
-    ("TEs gained / RBs lost target share", f"TE {M['f5']['te_first']}% -> {M['f5']['te_last']}%; RB {M['f5']['rb_first']}% -> {M['f5']['rb_last']}%", "Selected (F5)"),
-    ("Giveaways fell", f"{M['f6']['give_first']} -> {M['f6']['give_last']} per team-game", "Selected (F6)"),
-    ("Sack rate rose", f"{M['f7']['first']}% -> {M['f7']['last']}%", "Selected (F7)"),
+    ("Rushing yards per team-game rose", f"{M['f5']['first']} -> {M['f5']['last']}; YPC {M['f5']['ypc_first']} -> {M['f5']['ypc_last']}", "Selected (F5)"),
+    ("QBs took a bigger share of rushing", f"{M['f6']['share_first']}% -> {M['f6']['share_last']}% (peak {M['f6']['peak']}%)", "Selected (F6)"),
+    ("TEs gained / RBs lost target share", f"TE {M['f7']['te_first']}% -> {M['f7']['te_last']}%; RB {M['f7']['rb_first']}% -> {M['f7']['rb_last']}%", "Selected (F7)"),
+    ("Giveaways fell", f"{M['f4']['give_first']} -> {M['f4']['give_last']} per team-game", "Selected (F4)"),
+    ("Sack rate rose", f"{M['f3']['first']}% -> {M['f3']['last']}%", "Selected (F3)"),
     ("Home offenses out-gain away offenses, except 2020", f"+{M['f8']['diff_ypg']} yds/g; 2020 {M['f8']['y2020_diff']}", "Selected (F8)"),
     ("Team offensive output gap", f"{M['f9']['top']} {M['f9']['top_ypg']} vs {M['f9']['bottom']} {M['f9']['bottom_ypg']}", "Selected (F9)"),
     ("QBs dominate fantasy scoring per game", f"QB mean {M['f10']['by_pos']['QB']['mean']} PPR", "Selected (F10)"),
-    ("Scrimmage-yard leaders are mostly RBs", f"{M['f11']['top']['name']} {M['f11']['top']['scrimmage_yards']:,}", "Selected (F11)"),
+    ("Scrimmage-yard leaders (4 RB, 5 WR, 1 TE)", f"{M['f11']['top']['name']} {M['f11']['top']['scrimmage_yards']:,}", "Selected (F11)"),
     ("Completion % / yards per attempt trend",
      f"cmp% {r(S.loc[FIRST, 'completions'] / S.loc[FIRST, 'attempts'] * 100, 1)} -> {r(S.loc[LAST, 'completions'] / S.loc[LAST, 'attempts'] * 100, 1)}; "
      f"YPA {r(S.loc[FIRST, 'passing_yards'] / S.loc[FIRST, 'attempts'], 2)} -> {r(S.loc[LAST, 'passing_yards'] / S.loc[LAST, 'attempts'], 2)}",

@@ -128,7 +128,10 @@
   "peak_season": 2015,
   "peak": 259.1,
   "low_season": 2025,
-  "low": 224.9
+  "low": 224.9,
+  "ypa_first": 7.25,
+  "ypa_last": 7.02,
+  "att_pct_change": -10.3
  },
  "f2": {
   "games": [
@@ -195,7 +198,7 @@
   "rate_last": 12.5,
   "total": 1206
  },
- "f3": {
+ "f5": {
   "rush_ypg": [
    {
     "season": 2015,
@@ -382,6 +385,7 @@
   ],
   "first": 108.7,
   "last": 117.0,
+  "pct_change": 7.6,
   "peak_season": 2022,
   "peak": 121.5,
   "ypc_first": 4.13,
@@ -391,7 +395,7 @@
   "r1000_first": 7,
   "r1000_last": 17
  },
- "f4": {
+ "f6": {
   "qb_share": [
    {
     "season": 2015,
@@ -496,7 +500,7 @@
   "qb_carries_first": 1624,
   "qb_carries_last": 2215
  },
- "f5": {
+ "f7": {
   "share": [
    {
     "season": 2015,
@@ -590,7 +594,7 @@
   "rb_min": 17.4,
   "wr_last": 58.0
  },
- "f6": {
+ "f4": {
   "int_rate": [
    {
     "season": 2015,
@@ -739,7 +743,7 @@
   "give_low_season": 2025,
   "give_low": 1.14
  },
- "f7": {
+ "f3": {
   "sack_rate": [
    {
     "season": 2015,
@@ -1720,6 +1724,24 @@
    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/st82s2ytyzanatcmkqck"
   },
   "top10_rb": 4,
+  "top10_te": 1,
+  "best_per_game": {
+   "player_id": "00-0033280",
+   "name": "Christian McCaffrey",
+   "label": "Christian McCaffrey (RB)",
+   "position": "RB",
+   "teams": [
+    "CAR",
+    "SF"
+   ],
+   "scrimmage_yards": 12979,
+   "rushing_yards": 7589,
+   "receiving_yards": 5390,
+   "td_scored": 98,
+   "games": 112,
+   "per_game": 115.9,
+   "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/st82s2ytyzanatcmkqck"
+  },
   "top10_wr": 5
  }
 }

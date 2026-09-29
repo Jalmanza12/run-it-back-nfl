@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Run It Back — The NFL Offense, 2015–2025</title>
+  <meta name="description" content="A data story on how NFL offenses changed from 2015 to 2025: less passing, more rushing, running quarterbacks. Built from 66,228 player-game stat lines.">
+  <meta name="author" content="Jose Almanza">
+  <meta property="og:title" content="Run It Back — The NFL Offense, 2015–2025">
+  <meta property="og:description" content="Eleven seasons of NFL offense, by the numbers.">
+  <meta name="theme-color" content="#0a1628">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;450;500;550;600;650;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/report.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ============================================================ NAV (shared) -->
+<header class="site-nav">
+  <nav class="wrap nav-inner" aria-label="Main">
+    <a class="brand" href="index.html" aria-label="Run It Back — home">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#d22b3f"/><ellipse cx="20" cy="20" rx="13" ry="8.2" transform="rotate(-35 20 20)" fill="#fff"/><path d="M15.2 24.8 24.8 15.2M17 20.9l2.1 2.1M19 18.9l2.1 2.1M21 16.9l2.1 2.1" stroke="#d22b3f" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="brand-text">Run It Back<small>NFL Data Analytics</small></span>
+    </a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html" aria-current="page">The Report</a></li>
+      <li><a href="index.html#findings">Findings</a></li>
+      <li><a href="index.html#methodology">Methodology</a></li>
+      <li><a href="https://github.com/Jalmanza12/run-it-back-nfl" rel="noopener">Data &amp; Code</a></li>
+      <li><a class="nav-cta" href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+<!-- ============================================================ HERO -->
+<section class="hero" aria-labelledby="title">
+  <div class="hero-field" aria-hidden="true"></div>
+  <div class="hero-yard y1" aria-hidden="true">20</div>
+  <div class="hero-yard y2" aria-hidden="true">50</div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">NFL offense · <span data-m="meta.first_season">2015</span>–<span data-m="meta.last_season">2025</span> · <span data-m="meta.n_seasons">11</span> seasons</span>
+      <h1 class="hero-title" id="title">Run It<span>Back</span></h1>
+      <p class="hero-dek">Over eleven seasons, NFL offenses threw less, ran more, and handed a growing share of the run game to their quarterbacks.</p>
+      <p class="byline"><span>By <strong>Jose Almanza</strong></span><i class="dot"></i><span>Financial Data Analytics · Course project</span><i class="dot"></i><span><span data-m="meta.rows">66,228</span> player-games analyzed</span></p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#findings">Read the findings</a>
+        <a class="btn btn-ghost" href="dashboard.html">Explore the dashboard →</a>
+      </div>
+    </div>
+    <aside class="hero-stat" aria-label="Key statistic">
+      <div class="hs-label">Passing yards per team-game</div>
+      <div class="hs-big down"><span data-m="f1.pct_change" data-d="1">−13.2</span>%</div>
+      <p class="hs-cap">From <span data-m="f1.first" data-d="1">259.1</span> in <span data-m="meta.first_season">2015</span> to <span data-m="f1.last" data-d="1">224.9</span> in <span data-m="meta.last_season">2025</span>, the lowest of the period (regular season).</p>
+      <svg class="hero-spark" id="hero-spark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="hs-row">
+        <div class="hs-mini"><b class="up">+<span data-m="f5.pct_change" data-d="1">7.6</span>%</b><span>rushing yards per team-game</span></div>
+        <div class="hs-mini"><b><span data-m="f6.share_last" data-d="1">15.2</span>%</b><span>of rushing yards gained by QBs in <span data-m="meta.last_season">2025</span> (<span data-m="f6.share_first" data-d="1">11.8</span>% in <span data-m="meta.first_season">2015</span>)</span></div>
+      </div>
+    </aside>
+  </div>
+  <a class="scroll-cue" href="#summary">Scroll<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
+</section>
+
+<!-- ============================================================ SUMMARY -->
+<section class="summary" id="summary" aria-labelledby="summary-h">
+  <div class="wrap">
+    <div class="summary-grid reveal">
+      <div><span class="eyebrow">The short version</span><h2 id="summary-h">Summary</h2></div>
+      <p class="lede">
+        This report analyzes <strong><span data-m="meta.rows">66,228</span> game-by-game stat lines</strong> for every quarterback, running back, wide receiver and tight end who appeared in an NFL game from the <strong><span data-m="meta.first_season">2015</span> through <span data-m="meta.last_season">2025</span> seasons</strong>: <span data-m="meta.players">1,900</span> players on <span data-m="meta.teams">32</span> teams across <span data-m="meta.games">3,028</span> regular-season and playoff games, drawn from the open-source nflverse project. It measures how offensive production changed by season, position, team and venue. The main finding is that the league now passes less. Passing yards per team-game fell <strong><span data-m="f1.pct_change" data-d="1" data-f="abs">13.2</span>%</strong>, and 300-yard passing games dropped from <span data-m="f2.first">132</span> to <span data-m="f2.last">68</span>. Rushing rose to <span data-m="f5.last" data-d="1">117.0</span> yards per team-game, and quarterbacks carried more of it: their share of rushing yards grew from <span data-m="f6.share_first" data-d="1">11.8</span>% to <strong><span data-m="f6.share_last" data-d="1">15.2</span>%</strong>. Offenses also gave the ball away less often and were sacked more often. Home teams out-gained visitors in every season except 2020, when most stadiums were closed to fans.
+      </p>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpis" role="list" aria-label="Headline numbers">
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.player_games">66,228</div><div class="kpi-label">Player-games</div><div class="kpi-note">One row = one player’s stat line in one game</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.players">1,900</div><div class="kpi-label">Players</div><div class="kpi-note">QBs, RBs, WRs and TEs with at least one game</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.games">3,028</div><div class="kpi-label">Games</div><div class="kpi-note"><span data-m="meta.teams">32</span> teams, regular season + playoffs</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.seasons">11</div><div class="kpi-label">Seasons</div><div class="kpi-note"><span data-m="meta.first_season">2015</span>–<span data-m="meta.last_season">2025</span>; 16 games/team through 2020, 17 after</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.off_yards" data-compact="1">2.17M</div><div class="kpi-label">Offensive yards</div><div class="kpi-note">Passing + rushing yards, all games</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.td_scored">14,725</div><div class="kpi-label">Touchdowns scored</div><div class="kpi-note">Rushing + receiving + return TDs</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TOC -->
+<nav class="toc" id="findings" aria-label="Findings in this report">
+  <div class="wrap">
+    <h2>11 findings</h2>
+    <ol>
+      <li><a href="#f1"><span class="n">01</span>Passing volume fell to an 11-year low</a></li>
+      <li><a href="#f2"><span class="n">02</span>300-yard passing games were nearly cut in half</a></li>
+      <li><a href="#f3"><span class="n">03</span>Quarterbacks got sacked more often</a></li>
+      <li><a href="#f4"><span class="n">04</span>Giveaways fell to a record low</a></li>
+      <li><a href="#f5"><span class="n">05</span>Rushing gained ground, and got more efficient</a></li>
+      <li><a href="#f6"><span class="n">06</span>Quarterbacks became part of the run game</a></li>
+      <li><a href="#f7"><span class="n">07</span>Tight ends took targets from running backs</a></li>
+      <li><a href="#f8"><span class="n">08</span>Home-field edge vanished only in 2020</a></li>
+      <li><a href="#f9"><span class="n">09</span>Kansas City edged out a crowded top tier</a></li>
+      <li><a href="#f10"><span class="n">10</span>QBs are the most dependable fantasy scorers</a></li>
+      <li><a href="#f11"><span class="n">11</span>Derrick Henry is the era’s yardage leader</a></li>
+    </ol>
+  </div>
+</nav>
+
+<!-- ============================================================ CHAPTER 1 -->
+<div class="chapter"><div class="wrap chapter-head"><h2>I. The air game</h2></div></div>
+
+<section class="finding" id="f1" aria-labelledby="f1-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">01</span><span class="finding-tag">Passing volume</span></div>
+      <h3 id="f1-h">Passing volume fell to its lowest level of the period in <span data-m="f1.low_season">2025</span></h3>
+      <p>In <span data-m="meta.first_season">2015</span>, the average NFL team threw for <span data-m="f1.first" data-d="1">259.1</span> passing yards per game. By <span data-m="meta.last_season">2025</span> that figure was <span data-m="f1.last" data-d="1">224.9</span>, down <span data-m="f1.pct_change" data-d="1" data-f="abs">13.2</span>% and the lowest of the 11 seasons. <span data-m="f1.peak_season">2015</span> was the high point.</p>
+      <p>The decline is mostly about volume, not efficiency. Pass attempts fell from <span data-m="f1.att_first" data-d="1">35.7</span> to <span data-m="f1.att_last" data-d="1">32.0</span> per team-game (<span data-m="f1.att_pct_change" data-d="1">−10.3</span>%), while yards per attempt moved only from <span data-m="f1.ypa_first" data-d="2">7.25</span> to <span data-m="f1.ypa_last" data-d="2">7.02</span>. Teams are simply choosing to throw less.</p>
+      <div class="statline">
+        <div><b><span data-m="f1.first" data-d="1">259.1</span></b><span>pass yds / team-game, <span data-m="meta.first_season">2015</span></span></div>
+        <div><b class="red"><span data-m="f1.last" data-d="1">224.9</span></b><span>pass yds / team-game, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f1.att_last" data-d="1">32.0</span></b><span>attempts / team-game in <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Passing yards per team-game, regular season</h4>
+      <p class="chart-sub">Σ passing yards ÷ team-games played, by season</p>
+      <div id="c-f1" class="chart"></div>
+      <p class="chart-note"><b>Note:</b> y-axis does not start at zero. Passing yards are gross (sack yardage not subtracted).</p>
+      <details class="numbers" data-table="f1"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding flip" id="f2" aria-labelledby="f2-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">02</span><span class="finding-tag">Big passing games</span></div>
+      <h3 id="f2-h">The 300-yard passing game has nearly been cut in half</h3>
+      <p>Quarterbacks posted <span data-m="f2.first">132</span> regular-season games of 300 or more passing yards in <span data-m="meta.first_season">2015</span>. In <span data-m="meta.last_season">2025</span> they managed <span data-m="f2.last">68</span>, a <span data-m="f2.pct_change" data-d="1" data-f="abs">48.5</span>% drop, even though the schedule grew from 16 to 17 games per team in 2021.</p>
+      <p>As a share of all team-games, a 300-yard passer went from roughly one game in four (<span data-m="f2.rate_first" data-d="1">25.8</span>%) to one in eight (<span data-m="f2.rate_last" data-d="1">12.5</span>%). Across the whole period there were <span data-m="f2.total">1,206</span> such games.</p>
+      <div class="statline">
+        <div><b><span data-m="f2.first">132</span></b><span>300-yd games, <span data-m="meta.first_season">2015</span></span></div>
+        <div><b class="red"><span data-m="f2.last">68</span></b><span>300-yd games, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f2.rate_last" data-d="1">12.5</span>%</b><span>of team-games in <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Regular-season games with 300+ passing yards by one player</h4>
+      <p class="chart-sub">Count of player-games with passing_yards ≥ 300</p>
+      <div id="c-f2" class="chart"></div>
+      <p class="chart-note">Hover a column for the rate per team-game.</p>
+      <details class="numbers" data-table="f2"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding" id="f3" aria-labelledby="f3-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">03</span><span class="finding-tag">Pass protection</span></div>
+      <h3 id="f5-h">Quarterbacks are getting sacked more often</h3>
+      <p>Fewer throws have not meant cleaner pockets. The sack rate (sacks per dropback, where a dropback is a pass attempt or a sack) rose from <span data-m="f3.first" data-d="2">6.09</span>% in <span data-m="meta.first_season">2015</span> to <span data-m="f3.last" data-d="2">6.87</span>% in <span data-m="meta.last_season">2025</span>, peaking at <span data-m="f3.peak" data-d="2">7.15</span>% in <span data-m="f3.peak_season">2023</span>.</p>
+      <p>Comparing five-season blocks smooths out year-to-year noise: <span data-m="f3.avg_2015_2019" data-d="2">6.33</span>% of dropbacks ended in a sack in 2015–2019, against <span data-m="f3.avg_2021_2025" data-d="2">6.76</span>% in 2021–2025. Pressure on the passer is one plausible reason teams now lean on the run and on mobile quarterbacks (findings 5 and 6).</p>
+      <div class="statline">
+        <div><b><span data-m="f3.first" data-d="2">6.09</span>%</b><span>sack rate, <span data-m="meta.first_season">2015</span></span></div>
+        <div><b class="red"><span data-m="f3.peak" data-d="2">7.15</span>%</b><span>peak, <span data-m="f3.peak_season">2023</span></span></div>
+        <div><b><span data-m="f3.last" data-d="2">6.87</span>%</b><span>sack rate, <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Sack rate by season, regular season</h4>
+      <p class="chart-sub">Σ sacks ÷ (Σ pass attempts + Σ sacks)</p>
+      <div id="c-f3" class="chart"></div>
+      <details class="numbers" data-table="f3"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding flip" id="f4" aria-labelledby="f4-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">04</span><span class="finding-tag">Ball security</span></div>
+      <h3 id="f6-h">Offenses gave the ball away less than ever in <span data-m="f4.give_low_season">2025</span></h3>
+      <p>Interceptions plus lost fumbles by skill-position players fell from <span data-m="f4.give_first" data-d="2">1.43</span> per team-game in <span data-m="meta.first_season">2015</span> to <span data-m="f4.give_last" data-d="2">1.14</span> in <span data-m="meta.last_season">2025</span>, the lowest of any season in the data.</p>
+      <p>Both parts improved. The interception rate slipped from <span data-m="f4.int_first" data-d="2">2.38</span>% of pass attempts to <span data-m="f4.int_last" data-d="2">2.18</span>%. Lost fumbles dropped from <span data-m="f4.fum_first" data-d="2">0.58</span> to <span data-m="f4.fum_last" data-d="2">0.44</span> per team-game, a <span data-m="f4.fum_pct_change" data-d="1" data-f="abs">23.6</span>% decline.</p>
+      <div class="statline">
+        <div><b class="green"><span data-m="f4.give_last" data-d="2">1.14</span></b><span>giveaways / team-game, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f4.int_last" data-d="2">2.18</span>%</b><span>interception rate, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f4.fum_last" data-d="2">0.44</span></b><span>fumbles lost / team-game</span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Giveaways per team-game, regular season</h4>
+      <p class="chart-sub">(Σ interceptions thrown + Σ fumbles lost) ÷ team-games</p>
+      <div id="c-f4" class="chart"></div>
+      <p class="chart-note"><b>Note:</b> y-axis does not start at zero. Fumbles by non-skill players (e.g. linemen, returners listed at other positions) are not in the dataset.</p>
+      <details class="numbers" data-table="f4"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ CHAPTER 2 -->
+<div class="chapter"><div class="wrap chapter-head"><h2>II. The ground game</h2></div></div>
+
+<section class="finding" id="f5" aria-labelledby="f5-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">05</span><span class="finding-tag">Rushing</span></div>
+      <h3 id="f7-h">The run game gained ground, and got more efficient doing it</h3>
+      <p>Rushing yards per team-game climbed from <span data-m="f5.first" data-d="1">108.7</span> in <span data-m="meta.first_season">2015</span> to <span data-m="f5.last" data-d="1">117.0</span> in <span data-m="meta.last_season">2025</span> (+<span data-m="f5.pct_change" data-d="1">7.6</span>%), peaking at <span data-m="f5.peak" data-d="1">121.5</span> in <span data-m="f5.peak_season">2022</span>.</p>
+      <p>Teams did not run much more often: carries per team-game barely moved (<span data-m="f5.car_first" data-d="1">26.3</span> → <span data-m="f5.car_last" data-d="1">26.8</span>). What changed is what each carry produced, with yards per carry rising from <span data-m="f5.ypc_first" data-d="2">4.13</span> to <span data-m="f5.ypc_last" data-d="2">4.36</span>. The number of 1,000-yard rushers grew from <span data-m="f5.r1000_first">7</span> to <span data-m="f5.r1000_last">17</span>, though the extra 17th game makes that milestone easier to reach after 2020.</p>
+      <div class="statline">
+        <div><b class="green"><span data-m="f5.last" data-d="1">117.0</span></b><span>rush yds / team-game, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f5.ypc_last" data-d="2">4.36</span></b><span>yards per carry, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f5.r1000_last">17</span></b><span>1,000-yd rushers, <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Rushing yards per team-game, regular season</h4>
+      <p class="chart-sub">Σ rushing yards ÷ team-games played, by season</p>
+      <div id="c-f5" class="chart"></div>
+      <p class="chart-note"><b>Note:</b> y-axis does not start at zero.</p>
+      <details class="numbers" data-table="f5"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding flip" id="f6" aria-labelledby="f6-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">06</span><span class="finding-tag">Quarterbacks</span></div>
+      <h3 id="f4-h">Quarterbacks became a bigger part of the run game</h3>
+      <p>In <span data-m="meta.first_season">2015</span>, quarterbacks gained <span data-m="f6.share_first" data-d="1">11.8</span>% of all rushing yards by skill-position players. By <span data-m="f6.peak_season">2024</span> that share had reached <span data-m="f6.peak" data-d="1">16.9</span>%, and in <span data-m="meta.last_season">2025</span> it stood at <span data-m="f6.share_last" data-d="1">15.2</span>%.</p>
+      <p>In raw terms, QB rushing yards rose from <span data-m="f6.yards_first">6,562</span> to <span data-m="f6.yards_last">9,686</span> (+<span data-m="f6.yards_pct_change" data-d="1">47.6</span>%), topping out at <span data-m="f6.yards_peak">11,015</span> in <span data-m="f6.yards_peak_season">2024</span>. QB carries grew from <span data-m="f6.qb_carries_first">1,624</span> to <span data-m="f6.qb_carries_last">2,215</span>. These counts include designed runs, scrambles and kneel-downs (which count as carries with negative yards).</p>
+      <div class="statline">
+        <div><b><span data-m="f6.share_first" data-d="1">11.8</span>%</b><span>QB share of rush yds, <span data-m="meta.first_season">2015</span></span></div>
+        <div><b class="red"><span data-m="f6.peak" data-d="1">16.9</span>%</b><span>peak, <span data-m="f6.peak_season">2024</span></span></div>
+        <div><b><span data-m="f6.yards_last">9,686</span></b><span>QB rushing yards, <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Quarterbacks’ share of rushing yards, regular season</h4>
+      <p class="chart-sub">Σ QB rushing yards ÷ Σ rushing yards by all QBs, RBs, WRs and TEs</p>
+      <div id="c-f6" class="chart"></div>
+      <p class="chart-note"><b>Note:</b> y-axis does not start at zero.</p>
+      <details class="numbers" data-table="f6"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding" id="f7" aria-labelledby="f7-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">07</span><span class="finding-tag">Target share</span></div>
+      <h3 id="f3-h">Tight ends reclaimed targets as running backs lost them</h3>
+      <p>Wide receivers still see most of the targets (<span data-m="f7.wr_last" data-d="1">58.0</span>% in <span data-m="meta.last_season">2025</span>), but the balance behind them shifted. Tight ends’ share fell to <span data-m="f7.te_min" data-d="1">20.1</span>% in <span data-m="f7.te_min_season">2018</span>, then climbed to <span data-m="f7.te_max" data-d="1">24.0</span>% in <span data-m="f7.te_max_season">2025</span>, the highest of the period.</p>
+      <p>Running backs moved the other way. They drew <span data-m="f7.rb_max" data-d="1">21.7</span>% of targets in <span data-m="f7.rb_max_season">2017</span>, but only <span data-m="f7.rb_min" data-d="1">17.4</span>% in <span data-m="f7.rb_min_season">2024</span> and <span data-m="f7.rb_last" data-d="1">18.0</span>% in <span data-m="meta.last_season">2025</span>. The running back of this era gains more on the ground (finding 5) and catches fewer passes.</p>
+      <div class="statline">
+        <div><b><span data-m="f7.te_last" data-d="1">24.0</span>%</b><span>TE share, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b class="red"><span data-m="f7.rb_last" data-d="1">18.0</span>%</b><span>RB share, <span data-m="meta.last_season">2025</span></span></div>
+        <div><b><span data-m="f7.wr_last" data-d="1">58.0</span>%</b><span>WR share, <span data-m="meta.last_season">2025</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Share of targets by position, regular season</h4>
+      <p class="chart-sub">Σ targets for each position ÷ Σ targets for all four positions</p>
+      <ul class="chart-legend" id="lg-f7"></ul>
+      <div id="c-f7" class="chart"></div>
+      <p class="chart-note">QB targets (trick plays) are under 0.2% in every season and are too thin to see.</p>
+      <details class="numbers" data-table="f7"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ CHAPTER 3 -->
+<div class="chapter"><div class="wrap chapter-head"><h2>III. Where &amp; who</h2></div></div>
+
+
+<section class="finding flip" id="f8" aria-labelledby="f8-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">08</span><span class="finding-tag">Home vs away</span></div>
+      <h3 id="f8-h">Home offenses out-gain visitors, except in 2020, the season without crowds</h3>
+      <p>Across all 11 regular seasons, offenses averaged <span data-m="f8.home_ypg" data-d="1">364.5</span> yards per game at home and <span data-m="f8.away_ypg" data-d="1">352.5</span> on the road, a home edge of <span data-m="f8.diff_ypg" data-d="1">11.9</span> yards. They also scored <span data-m="f8.home_td" data-d="2">2.54</span> touchdowns per game at home against <span data-m="f8.away_td" data-d="2">2.31</span> away.</p>
+      <p>That edge showed up in every season but one. In <span data-m="f8.negative_seasons.0">2020</span>, when most stadiums were closed to fans because of COVID-19, visiting offenses averaged <span data-m="f8.y2020_away" data-d="1">377.8</span> yards to the home side’s <span data-m="f8.y2020_home" data-d="1">369.0</span>. The largest home edge came in <span data-m="f8.max_diff_season">2023</span> (+<span data-m="f8.max_diff" data-d="1">22.6</span>).</p>
+      <div class="statline">
+        <div><b>+<span data-m="f8.diff_ypg" data-d="1">11.9</span></b><span>home yds/game edge, all seasons</span></div>
+        <div><b class="red"><span data-m="f8.y2020_diff" data-d="1">−8.8</span></b><span>home edge in <span data-m="f8.negative_seasons.0">2020</span></span></div>
+        <div><b>+<span data-m="f8.max_diff" data-d="1">22.6</span></b><span>largest edge, <span data-m="f8.max_diff_season">2023</span></span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Home minus away offensive yards per team-game</h4>
+      <p class="chart-sub">(passing + rushing yards) at home − on the road; regular season</p>
+      <div id="c-f8" class="chart"></div>
+      <p class="chart-note">Above zero = home offenses gained more.</p>
+      <details class="numbers" data-table="f8"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding" id="f9" aria-labelledby="f9-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">09</span><span class="finding-tag">Teams</span></div>
+      <h3 id="f9-h"><span data-m="f9.top_name">Kansas City Chiefs</span> produced the most yards, by the slimmest of margins</h3>
+      <p>Over <span data-m="f9.games_per_team">181</span> regular-season games each, the <span data-m="f9.top_name">Kansas City Chiefs</span> averaged <span data-m="f9.top_ypg" data-d="1">382.9</span> offensive yards per game, just ahead of <span data-m="f9.second">TB</span> (<span data-m="f9.second_ypg" data-d="1">382.7</span>). The league average was <span data-m="f9.league_ypg" data-d="1">358.5</span>.</p>
+      <p>At the bottom, the <span data-m="f9.bottom_name">New York Jets</span> averaged <span data-m="f9.bottom_ypg" data-d="1">320.1</span>, a gap of <span data-m="f9.gap" data-d="1">62.8</span> yards per game to the top. That is roughly one long touchdown drive, every week, for 11 years. The best single season belonged to <span data-m="f9.best_season_team">DAL</span> in <span data-m="f9.best_season">2019</span> (<span data-m="f9.best_season_ypg" data-d="1">440.9</span>).</p>
+      <div class="statline">
+        <div><b><span data-m="f9.top_ypg" data-d="1">382.9</span></b><span><span data-m="f9.top">KC</span>, yds / game</span></div>
+        <div><b><span data-m="f9.league_ypg" data-d="1">358.5</span></b><span>league average</span></div>
+        <div><b class="red"><span data-m="f9.bottom_ypg" data-d="1">320.1</span></b><span><span data-m="f9.bottom">NYJ</span>, yds / game</span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Offensive yards per game by team, 2015–2025</h4>
+      <p class="chart-sub">(Σ passing + Σ rushing yards) ÷ team-games; regular season; ranked</p>
+      <p class="ref-line"><span class="swatch" style="background:#d22b3f"></span>Top &amp; bottom team <span class="swatch" style="background:#183257;margin-left:10px"></span>All others</p>
+      <div id="c-f9" class="ranked compact"></div>
+      <p class="chart-note">Franchises that relocated are shown under their current name (Raiders, Chargers, Rams).</p>
+      <details class="numbers" data-table="f9"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding flip" id="f10" aria-labelledby="f10-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">10</span><span class="finding-tag">Fantasy points</span></div>
+      <h3 id="f10-h">Quarterbacks are the most dependable fantasy scorers</h3>
+      <p>Measured in PPR fantasy points per player-game, quarterbacks averaged <span data-m="f10.by_pos.QB.mean" data-d="2">14.04</span>. That is <span data-m="f10.qb_vs_next_pct">64</span>% more than wide receivers (<span data-m="f10.by_pos.WR.mean" data-d="2">8.55</span>), with running backs (<span data-m="f10.by_pos.RB.mean" data-d="2">8.46</span>) and tight ends (<span data-m="f10.by_pos.TE.mean" data-d="2">6.24</span>) further behind.</p>
+      <p>The shape of the distribution matters as much as the average. The QB median (<span data-m="f10.by_pos.QB.median" data-d="1">14.1</span>) sits right on the mean, so a typical QB game looks like an average one. For RBs and WRs the medians (<span data-m="f10.by_pos.RB.median" data-d="1">6.2</span> and <span data-m="f10.by_pos.WR.median" data-d="1">6.4</span>) sit far below the means, pulled up by a few big games. QBs hit 20+ points in <span data-m="f10.by_pos.QB.share20" data-d="1">25.6</span>% of games, versus <span data-m="f10.by_pos.RB.share20" data-d="1">9.7</span>% for RBs, <span data-m="f10.by_pos.WR.share20" data-d="1">9.3</span>% for WRs and <span data-m="f10.by_pos.TE.share20" data-d="1">3.9</span>% for TEs.</p>
+      <div class="statline">
+        <div><b><span data-m="f10.by_pos.QB.mean" data-d="2">14.04</span></b><span>QB avg PPR / game</span></div>
+        <div><b><span data-m="f10.by_pos.WR.mean" data-d="2">8.55</span></b><span>WR avg PPR / game</span></div>
+        <div><b class="red"><span data-m="f10.by_pos.QB.share20" data-d="1">25.6</span>%</b><span>QB games with 20+ pts</span></div>
+      </div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>PPR fantasy points per player-game, by position</h4>
+      <p class="chart-sub">Regular season, games where the player recorded a stat; percentiles of the distribution</p>
+      <div id="c-f10" class="chart"></div>
+      <details class="numbers" data-table="f10"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<section class="finding" id="f11" aria-labelledby="f11-h">
+  <div class="wrap finding-grid">
+    <div class="finding-text reveal">
+      <div class="finding-meta"><span class="finding-no">11</span><span class="finding-tag">Players</span></div>
+      <h3 id="f11-h"><span data-m="f11.top.name">Derrick Henry</span> is the era’s yardage leader</h3>
+      <p>No player gained more scrimmage yards (rushing + receiving) in the 2015–2025 regular seasons than <span data-m="f11.top.name">Derrick Henry</span>: <span data-m="f11.top.scrimmage_yards">14,819</span> yards in <span data-m="f11.top.games">152</span> games with a recorded stat. <span data-m="f11.second.name">Christian McCaffrey</span> is second with <span data-m="f11.second.scrimmage_yards">12,979</span>, and he needed only <span data-m="f11.second.games">112</span> games. His <span data-m="f11.best_per_game.per_game" data-d="1">115.9</span> yards per game is the best rate in the top 10.</p>
+      <p>The top 10 is split between <span data-m="f11.top10_rb">4</span> running backs, <span data-m="f11.top10_wr">5</span> wide receivers and <span data-m="f11.top10_te">1</span> tight end. Durable receivers can pile up totals over many seasons, while backs need fewer games to get there.</p>
+      <div class="leader-cards" id="leader-cards"></div>
+    </div>
+    <figure class="card chart-card reveal" style="margin:0">
+      <h4>Most regular-season scrimmage yards, 2015–2025</h4>
+      <p class="chart-sub">Σ rushing yards + Σ receiving yards per player; teams in order played for</p>
+      <div id="c-f11" class="ranked players"></div>
+      <p class="chart-note">Headshots: NFL via nflverse. Initials are shown if an image is unavailable.</p>
+      <details class="numbers" data-table="f11"><summary>Show the numbers</summary></details>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================================================ METHODOLOGY -->
+<section class="method" id="methodology" aria-labelledby="method-h">
+  <div class="wrap">
+    <span class="eyebrow">Data &amp; methodology</span>
+    <h2 id="method-h">How these numbers were made</h2>
+    <p class="intro">Every figure on this page is computed by one script, <code>analysis/analysis.py</code>, from the cleaned dataset in this project’s repository. The same file feeds the charts, so the text and the graphics cannot disagree. The interactive dashboard recomputes the same measures in your browser, and a test script checks that both pages agree.</p>
+
+    <div class="method-grid">
+      <div class="method-card reveal">
+        <h3><span class="ico">1</span>Data source</h3>
+        <p>Weekly player statistics from the <a href="https://github.com/nflverse/nflverse-data/releases/tag/stats_player">nflverse</a> open-data project (the same data returned by <code>nflreadr::load_player_stats()</code>), downloaded 28 September 2026. nflverse compiles NFL play-by-play into per-player, per-game box scores. NFL data belongs to its respective owners.</p>
+      </div>
+      <div class="method-card reveal">
+        <h3><span class="ico">2</span>What one row is</h3>
+        <p><strong>One player’s stat line in one game</strong>: for example, Patrick Mahomes in Week 5 of 2023. The file has <span data-m="meta.rows">66,228</span> rows and <span data-m="meta.columns">40</span> columns, covering <span data-m="meta.players">1,900</span> players, <span data-m="meta.teams">32</span> teams and <span data-m="meta.games">3,028</span> games. A player only has a row for games where he appeared in the stat sheet. Weeks he didn’t play are absent, not zero.</p>
+      </div>
+      <div class="method-card reveal">
+        <h3><span class="ico">3</span>Time period</h3>
+        <p>The <span data-m="meta.first_season">2015</span> through <span data-m="meta.last_season">2025</span> NFL seasons (<span data-m="meta.n_seasons">11</span> complete seasons), regular season and playoffs. The 2026 season is excluded because it is still in progress. Teams played 16 regular-season games through 2020 and 17 from 2021, so seasons are compared <em>per team-game</em>, not by raw totals.</p>
+      </div>
+      <div class="method-card reveal">
+        <h3><span class="ico">4</span>Cleaning</h3>
+        <ul>
+          <li>Combined 11 season files with an identical schema (199,868 raw rows × 150 columns), and kept 40 columns.</li>
+          <li>Added <code>home_away</code> from the game ID, mapping historic team codes (OAK→LV, SD→LAC, STL→LA).</li>
+          <li>Added team name, conference and division; derived scrimmage yards, total yards and total TDs; converted sack yards to positive numbers.</li>
+          <li>Validated the result: no duplicate player-games, no missing values, completions ≤ attempts, receptions ≤ targets.</li>
+        </ul>
+      </div>
+      <div class="method-card wide reveal">
+        <h3><span class="ico">5</span>Rows removed &amp; excluded</h3>
+        <ul>
+          <li><strong>236 rows removed</strong> with no player ID. These are team-level placeholder rows, not players.</li>
+          <li><strong>133,404 rows removed</strong> for defensive, special-teams and offensive-line players. Those positions almost never record offensive statistics, and the project studies offensive production.</li>
+          <li><strong>2026 season not loaded</strong>, because it was incomplete at download time.</li>
+          <li><strong>Kept but flagged:</strong> <span data-m="meta.no_stats_rows">6,530</span> rows where a player appeared but recorded no offensive stat. They add zero to totals and are excluded from per-player-game averages and medians.</li>
+          <li><strong>Postseason rows</strong> (<span data-m="meta.post_rows">2,841</span>) are kept in the data and the dashboard. The report’s findings use the regular season only (<span data-m="meta.reg_rows">63,387</span> rows), because playoff length differs by team and changed in 2020.</li>
+        </ul>
+      </div>
+      <div class="method-card wide reveal">
+        <h3><span class="ico">6</span>How every measure is calculated</h3>
+        <p>Rates are always a <strong>ratio of sums</strong>, never an average of per-game ratios, so big and small games are weighted by their volume. A <strong>team-game</strong> is one team’s side of one game: 512 per regular season through 2020, 544 from 2021 (542 in 2022, when one game was cancelled).</p>
+        <div class="formula-wrap">
+        <table class="formula">
+          <thead><tr><th>Measure</th><th>Formula</th><th>Used in</th></tr></thead>
+          <tbody>
+            <tr><td>Per team-game</td><td>Σ stat ÷ number of distinct (game, team) pairs</td><td>Findings 1, 4, 5, 8, 9; dashboard</td></tr>
+            <tr><td>Offensive yards</td><td>Σ passing_yards + Σ rushing_yards</td><td>Findings 8, 9; KPIs. Receiving yards are not added, because they duplicate passing yards.</td></tr>
+            <tr><td>Touchdowns scored</td><td>Σ (total_tds − passing_tds)</td><td>= rushing + receiving + return TDs; passing TDs would double count receiving TDs.</td></tr>
+            <tr><td>300-yard games</td><td>count of rows with passing_yards ≥ 300</td><td>Finding 2; rate = count ÷ team-games</td></tr>
+            <tr><td>Yards per attempt</td><td>Σ passing_yards ÷ Σ attempts</td><td>Finding 1</td></tr>
+            <tr><td>Yards per carry</td><td>Σ rushing_yards ÷ Σ carries</td><td>Finding 5</td></tr>
+            <tr><td>1,000-yard rushers</td><td>players with Σ rushing_yards ≥ 1,000 in a regular season</td><td>Finding 5</td></tr>
+            <tr><td>QB rushing share</td><td>Σ rushing_yards (QB) ÷ Σ rushing_yards (all four positions)</td><td>Finding 6</td></tr>
+            <tr><td>Target share</td><td>Σ targets (position) ÷ Σ targets (all)</td><td>Finding 7</td></tr>
+            <tr><td>Interception rate</td><td>Σ interceptions ÷ Σ attempts</td><td>Finding 4</td></tr>
+            <tr><td>Giveaways per team-game</td><td>(Σ interceptions + Σ fumbles_lost) ÷ team-games</td><td>Finding 4</td></tr>
+            <tr><td>Sack rate</td><td>Σ sacks ÷ (Σ attempts + Σ sacks)</td><td>Finding 3</td></tr>
+            <tr><td>Home edge</td><td>offensive yards per home team-game − per away team-game</td><td>Finding 8</td></tr>
+            <tr><td>Average / median per player-game</td><td>mean / median of the stat over rows where no_stats_flag = False</td><td>Finding 10; dashboard</td></tr>
+            <tr><td>Percentiles</td><td>10th, 25th, 50th, 75th, 90th percentile (linear interpolation)</td><td>Finding 10</td></tr>
+            <tr><td>Scrimmage yards</td><td>Σ rushing_yards + Σ receiving_yards</td><td>Finding 11; ranking = sort descending</td></tr>
+            <tr><td>Completion % / catch rate</td><td>Σ completions ÷ Σ attempts; Σ receptions ÷ Σ targets</td><td>Dashboard</td></tr>
+            <tr><td>% change</td><td>(last ÷ first − 1) × 100</td><td>Throughout</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="method-card wide reveal">
+        <h3><span class="ico">7</span>Limitations</h3>
+        <ul>
+          <li>Only QBs, RBs, WRs and TEs are included. Team totals therefore leave out the rare offensive stat by another position (for example, a trick-play pass by a punter). Official team statistics will differ slightly.</li>
+          <li>Passing yards are <em>gross</em> (sack yardage is not subtracted), unlike the NFL’s official net passing figure.</li>
+          <li>Teams are shown under their current franchise code for all years (LV = Oakland Raiders through 2019; LAC = San Diego through 2016; LA = St. Louis in 2015).</li>
+          <li>These are descriptive trends. The report does not claim to explain <em>why</em> they happened.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CTA -->
+<section class="cta" aria-labelledby="cta-h">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow" style="color:#ff8a98">Your turn</span>
+      <h2 id="cta-h">Explore the data yourself</h2>
+      <p>Filter all <span data-m="meta.rows">66,228</span> player-games by season, team, position, conference, venue, season type or player. Switch the stat and the breakdown, and check every number in the table.</p>
+    </div>
+    <div>
+      <ul>
+        <li>7 filters with one-click reset</li>
+        <li>6 live summary numbers</li>
+        <li>5 interactive charts</li>
+        <li>Sortable, searchable data table</li>
+      </ul>
+      <a class="btn btn-primary" href="dashboard.html">Open the dashboard →</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============================================================ FOOTER (shared) -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="brand-text">Run It Back</div>
+        <p style="margin-top:10px">An independent data analysis of NFL offensive production, 2015–2025. Built by Jose Almanza for a Financial Data Analytics course.</p>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul><li><a href="index.html">The Report</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="index.html#methodology">Methodology</a></li></ul>
+      </div>
+      <div>
+        <h4>Sources</h4>
+        <ul>
+          <li><a href="https://github.com/nflverse/nflverse-data">nflverse data</a></li>
+          <li><a href="https://github.com/Jalmanza12/run-it-back-nfl">Code &amp; data (GitHub)</a></li>
+          <li><a href="https://d3js.org/">Charts: D3.js</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="disclaimer">Not affiliated with, endorsed by, or sponsored by the National Football League or any team. Team names and logos are trademarks of their respective owners and are shown for identification only; logos are loaded from ESPN’s public CDN and player headshots from NFL.com via nflverse. Statistics © their respective owners, compiled by nflverse.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/report.js"></script>
+</body>
+</html>
