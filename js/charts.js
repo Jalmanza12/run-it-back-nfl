@@ -334,12 +334,12 @@
       const g = svg.select("g.labels").selectAll("g.marker").data(mk, (m) => m.label).join((e) => {
         const gg = e.append("g").attr("class", "marker");
         gg.append("line").attr("stroke", "#d22b3f").attr("stroke-width", 2);
-        gg.append("text").attr("class", "dlabel");
+        gg.append("text").attr("class", "dlabel").attr("stroke", "#fff").attr("stroke-width", 4).attr("paint-order", "stroke").attr("stroke-linejoin", "round");
         return gg;
       });
-      g.select("line").transition(t).attr("x1", (m) => x(m.x)).attr("x2", (m) => x(m.x)).attr("y1", -6).attr("y2", ih);
+      g.select("line").transition(t).attr("x1", (m) => x(m.x)).attr("x2", (m) => x(m.x)).attr("y1", 0).attr("y2", ih);
       g.select("text").attr("text-anchor", (m) => (x(m.x) > iw * 0.75 ? "end" : "start"))
-        .attr("dx", (m) => (x(m.x) > iw * 0.75 ? -6 : 6)).attr("y", -8)
+        .attr("dx", (m) => (x(m.x) > iw * 0.75 ? -6 : 6)).attr("y", (m, i) => 12 + i * 16)
         .text((m) => m.label).transition(t).attr("x", (m) => x(m.x));
     }, opts);
   }

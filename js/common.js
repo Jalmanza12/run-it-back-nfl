@@ -18,7 +18,7 @@
     TEN: "#0C2340", WAS: "#5A1414",
   };
   const ESPN_CODE = { WAS: "wsh", LA: "lar" };
-  const logoUrl = (t) => `https://a.espncdn.com/i/teamlogos/nfl/500/${ESPN_CODE[t] || t.toLowerCase()}.png`;
+  const logoUrl = (t) => `https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/${ESPN_CODE[t] || t.toLowerCase()}.png&w=80&h=80`;
 
   /* ---------------------------------------------------------------- formatting */
   const nf = (d) => new Intl.NumberFormat("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -56,7 +56,7 @@
     const b = el("span", { class: "team-badge", title: code, style: { "--tc": TEAM_COLORS[code] || "#183257" } });
     if (size) { b.style.width = b.style.height = size + "px"; }
     b.appendChild(el("span", { class: "fallback", "aria-hidden": "true", text: code }));
-    const img = el("img", { alt: "", loading: "lazy", decoding: "async" });
+    const img = el("img", { alt: "", decoding: "async" }); // small; eager so it is ready when scrolled into view
     img.addEventListener("load", () => b.classList.add("loaded"));
     img.addEventListener("error", () => img.remove());
     img.src = logoUrl(code);
@@ -69,6 +69,9 @@
     return ((parts[0] || "")[0] || "") + ((parts[parts.length - 1] || "")[0] || "");
   }
 
+  // nflverse headshots are full-size (≈3400px) Cloudinary images: request a 120px face crop instead.
+  const thumb = (u) => String(u).replace("/f_auto,q_auto/", "/f_auto,q_auto,w_120,h_120,c_thumb,g_face/");
+
   /** Player headshot; falls back to initials on the team colour if the image is missing or fails. */
   function avatar(name, img, team) {
     const a = el("span", { class: "avatar", style: { "--tc": TEAM_COLORS[team] || "#183257" }, "aria-hidden": "true" },
@@ -77,7 +80,7 @@
       const i = el("img", { alt: "", loading: "lazy", decoding: "async", referrerpolicy: "no-referrer" });
       i.addEventListener("load", () => i.classList.add("loaded"));
       i.addEventListener("error", () => i.remove());
-      i.src = img;
+      i.src = thumb(img);
       a.appendChild(i);
     }
     return a;

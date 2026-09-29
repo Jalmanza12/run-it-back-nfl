@@ -221,6 +221,25 @@ strong { font-weight: 650; }
 .tooltip .tt-row b { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
 .tooltip .tt-row span { color: #c9d4e3; }
 
+/* ------------------------------------------------------------------ ranked bars (HTML; used by both pages) */
+.ranked { display: grid; gap: 3px; }
+.rk-row { display: grid; grid-template-columns: 22px minmax(150px, 1.2fr) 2fr 72px; align-items: center; gap: 10px; padding: 3px 6px; border-radius: 8px; transition: background .15s; }
+.rk-row:hover, .rk-row:focus-visible { background: var(--paper); }
+.rk-rank { font: 700 12px/1 var(--font-body); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.rk-id { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.rk-text { display: flex; flex-direction: column; min-width: 0; }
+.rk-label { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-track { position: relative; height: 14px; }
+.rk-bar { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; transition: width .6s cubic-bezier(.2, .7, .2, 1), left .6s, background .3s; }
+.rk-val { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.rk-row.is-hi .rk-label { color: var(--red); }
+.rk-empty { color: var(--muted); padding: 30px 0; text-align: center; }
+.ranked .team-badge { width: 22px; height: 22px; }
+.ranked.players .avatar { width: 34px; height: 34px; font-size: 12px; }
+@media (max-width: 520px) { .rk-row { grid-template-columns: 18px minmax(110px, 1fr) 1fr 58px; gap: 6px; } }
+
+
 /* ------------------------------------------------------------------ footer */
 .site-footer { background: var(--navy-950); color: #9fb0c8; padding: 48px 0 40px; font-size: 13.5px; margin-top: 0; }
 .site-footer .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
