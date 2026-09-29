@@ -103,7 +103,8 @@
       if (lo === undefined) { lo = 0; hi = 1; }
       if (o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
       const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.1 || 1;
-      const y = d3.scaleLinear().domain([o.zero && lo >= 0 ? 0 : lo - pad, hi + pad]).nice(5).range([ih, 0]);
+      const y0 = o.zero && lo >= 0 ? 0 : lo >= 0 ? Math.max(0, lo - pad) : lo - pad; // never pad non-negative data below zero
+      const y = d3.scaleLinear().domain([y0, hi + pad]).nice(5).range([ih, 0]);
       const yf = o.yFormat || ((v) => fmt(v));
       const t = svg.transition().duration(dur);
 
@@ -240,7 +241,9 @@
         .transition(t).attr("d", (d) => barPath(x(d.key) + off, y(0), bw, y(d.value)));
 
       const L = o.labels || "none";
-      const lab = data.filter((d, i) => L === "all" ? bw >= 16 : L === "ends" ? (i === 0 || i === data.length - 1)
+      const lf = o.labelFormat || o.tipFormat || yf;
+      const fits = (d) => String(lf(d.value)).length * 7 <= x.step() - 2; // never let direct labels collide
+      const lab = data.filter((d, i) => L === "all" ? bw >= 16 && data.every(fits) : L === "ends" ? (i === 0 || i === data.length - 1)
         : L === "highlight" ? (o.highlight && o.highlight.has(d.key)) || i === 0 || i === data.length - 1 : false);
       svg.select("g.labels").selectAll("text.dlabel").data(lab, (d) => d.key)
         .join("text").attr("class", "dlabel").attr("text-anchor", "middle")
