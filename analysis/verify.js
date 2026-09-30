@@ -75,6 +75,9 @@ R.f7.share.forEach((d) => {
   ["WR", "TE", "RB", "QB"].forEach((p) => check(`f7.share ${d.season} ${p}`, (M.sum(ds, g.filter((i) => c.pos[i] === posIdx(p)), "tgt") / tot) * 100, d[p]));
 });
 
+R.td.td_pg.forEach((d) => check(`td.td_pg ${d.season}`, M.aggregate(ds, S.get(d.season), "td", "ptg"), d.value, 2));
+R.td.totals.forEach((d) => check(`td.totals ${d.season}`, M.sum(ds, S.get(d.season), "td"), d.value, 0));
+
 /* ---------------- home/away — through the dashboard's venue filter */
 R.f8.by_season.forEach((d) => {
   const h = M.filter(ds, { ...REG, seasonMin: d.season, seasonMax: d.season, venue: "home" });

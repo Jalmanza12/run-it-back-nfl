@@ -180,6 +180,15 @@ M["f3"] = {
                        / (S.loc[2021:2025, "attempts"].sum() + S.loc[2021:2025, "sacks_suffered"].sum()) * 100, 2),
 }
 
+# ------------------------------------------------------------------ touchdowns by season (touchdown scenes)
+td_pg = S["td_scored"] / tg
+M["td"] = {
+    "td_pg": series(td_pg, 2),
+    "totals": [{"season": int(k), "value": int(v)} for k, v in S["td_scored"].items()],
+    "first": r(td_pg[FIRST], 2), "last": r(td_pg[LAST], 2),
+    "peak_season": int(td_pg.idxmax()), "peak": r(td_pg.max(), 2),
+}
+
 # ------------------------------------------------------------------ F8 home vs away
 tgm = reg.groupby(["season", "game_id", "team", "home_away"])[["off_yards", "td_scored"]].sum().reset_index()
 ha = tgm.groupby(["season", "home_away"])["off_yards"].mean().unstack()

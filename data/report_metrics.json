@@ -843,6 +843,104 @@
   "avg_2015_2019": 6.33,
   "avg_2021_2025": 6.76
  },
+ "td": {
+  "td_pg": [
+   {
+    "season": 2015,
+    "value": 2.39
+   },
+   {
+    "season": 2016,
+    "value": 2.42
+   },
+   {
+    "season": 2017,
+    "value": 2.22
+   },
+   {
+    "season": 2018,
+    "value": 2.51
+   },
+   {
+    "season": 2019,
+    "value": 2.44
+   },
+   {
+    "season": 2020,
+    "value": 2.76
+   },
+   {
+    "season": 2021,
+    "value": 2.48
+   },
+   {
+    "season": 2022,
+    "value": 2.29
+   },
+   {
+    "season": 2023,
+    "value": 2.27
+   },
+   {
+    "season": 2024,
+    "value": 2.44
+   },
+   {
+    "season": 2025,
+    "value": 2.46
+   }
+  ],
+  "totals": [
+   {
+    "season": 2015,
+    "value": 1225
+   },
+   {
+    "season": 2016,
+    "value": 1241
+   },
+   {
+    "season": 2017,
+    "value": 1135
+   },
+   {
+    "season": 2018,
+    "value": 1287
+   },
+   {
+    "season": 2019,
+    "value": 1248
+   },
+   {
+    "season": 2020,
+    "value": 1413
+   },
+   {
+    "season": 2021,
+    "value": 1349
+   },
+   {
+    "season": 2022,
+    "value": 1243
+   },
+   {
+    "season": 2023,
+    "value": 1235
+   },
+   {
+    "season": 2024,
+    "value": 1328
+   },
+   {
+    "season": 2025,
+    "value": 1336
+   }
+  ],
+  "first": 2.39,
+  "last": 2.46,
+  "peak_season": 2020,
+  "peak": 2.76
+ },
  "f8": {
   "by_season": [
    {
