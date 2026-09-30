@@ -10,6 +10,8 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// the site-wide Motion switch (common.js) overrides the OS setting when the visitor uses it
+const still = () => (window.RIB && window.RIB.motion ? !window.RIB.motion.on : reduceMotion);
 
 /* ---------------------------------------------------------------- textures */
 function leatherTextures(size = 512) {
@@ -129,8 +131,8 @@ export function mountFootball(container, opts = {}) {
   /* interaction state */
   let dragging = false, moved = 0, lastX = 0, lastY = 0;
   let vx = 0, vy = 0;                          // drag inertia (rad/frame)
-  let spiral = reduceMotion ? 0 : 0.012;      // spin about long axis
-  const idleSpiral = spiral;
+  let spiral = still() ? 0 : 0.012;         // spin about long axis
+  let idleSpiral = spiral;
   let throwT = 0;                               // throw animation clock
   const el = renderer.domElement;
   el.style.touchAction = "pan-y";
@@ -188,7 +190,7 @@ export function mountFootball(container, opts = {}) {
       const p = 1 - throwT;
       spinner.position.y = Math.sin(p * Math.PI) * 0.9;
       spinner.position.x = Math.sin(p * Math.PI * 2) * 0.25;
-    } else if (!reduceMotion) {
+    } else if (!still()) {
       spinner.position.y = Math.sin(now / 900) * 0.06;      // gentle float
     }
     const tiltTarget = -0.25 + scrollTilt * 0.6;
@@ -196,11 +198,12 @@ export function mountFootball(container, opts = {}) {
     shadow.material.opacity = 0.9 - Math.abs(spinner.position.y) * 0.5;
     shadow.scale.setScalar(1 - spinner.position.y * 0.25);
     renderer.render(scene, camera);
-    if (reduceMotion && !dragging && Math.abs(vx) + Math.abs(vy) < 1e-4 && throwT === 0 && spiral <= idleSpiral) { running = false; return; }
+    if (still() && !dragging && Math.abs(vx) + Math.abs(vy) < 1e-4 && throwT === 0 && spiral <= idleSpiral) { running = false; return; }
     requestAnimationFrame(frame);
   }
   function loop() { if (running) return; running = true; t0 = performance.now(); requestAnimationFrame(frame); }
   el.addEventListener("pointerdown", loop);
+  window.addEventListener("rib:motion", () => { idleSpiral = still() ? 0 : 0.012; spiral = Math.max(idleSpiral, Math.min(spiral, idleSpiral || spiral)); loop(); });
   loop();
   container.classList.add("is-3d");
   return { throwIt, renderer };

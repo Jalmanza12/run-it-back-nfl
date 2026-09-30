@@ -232,10 +232,6 @@ table.data tfoot td { font-weight: 700; background: #f7f8fa; border-top: 1px sol
 .stadium-tools .tool-gap { flex: 1; }
 .seg-sm { width: auto; }
 .seg-sm button { flex: none; padding: 8px 12px; font-size: 12.5px; }
-.tool { font: 600 12.5px/1 var(--font-body); color: var(--ink-2); background: #fff; border: 1.5px solid var(--hair-2); border-radius: 9px; padding: 8px 12px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
-.tool:hover { border-color: var(--navy-700); color: var(--ink); }
-.tool[aria-pressed="true"] { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
-.tool.icon { width: 34px; padding: 8px 0; font-size: 16px; }
 .stadium { position: relative; height: clamp(360px, 44vw, 540px); border-radius: 12px; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #183257, #0a1628 70%); }
 .stadium canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; cursor: grab; }
 .stadium canvas:active { cursor: grabbing; }

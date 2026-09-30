@@ -394,6 +394,7 @@
     drawIt(M);
     tables(M);
     document.documentElement.dataset.ready = "1";
+    window.dispatchEvent(new CustomEvent("rib:metrics", { detail: M }));   // the field / play scenes reuse this data
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

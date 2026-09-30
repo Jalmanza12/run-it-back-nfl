@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;450;500;550;600;650;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/report.css">
+  <link rel="stylesheet" href="css/experience.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -66,17 +67,20 @@
       <div class="hs-label">Passing yards per team-game</div>
       <div class="hs-big down"><span data-m="f1.pct_change" data-d="1">−13.2</span>%</div>
       <p class="hs-cap">From <span data-m="f1.first" data-d="1">259.1</span> in <span data-m="meta.first_season">2015</span> to <span data-m="f1.last" data-d="1">224.9</span> in <span data-m="meta.last_season">2025</span>, the lowest of the period</p>
+      <a class="hs-play" href="#field-of-play" data-fop-play="pass">▶ Run the passing play</a>
       <svg class="hero-spark" id="hero-spark" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"></svg>
     </div>
     <div class="hs-cell" role="listitem">
       <div class="hs-label">Rushing yards per team-game</div>
       <div class="hs-big up">+<span data-m="f5.pct_change" data-d="1">7.6</span>%</div>
       <p class="hs-cap"><span data-m="f5.first" data-d="1">108.7</span> → <span data-m="f5.last" data-d="1">117.0</span>, as yards per carry climbed</p>
+      <a class="hs-play" href="#field-of-play" data-fop-play="rush">▶ Run the rushing play</a>
     </div>
     <div class="hs-cell" role="listitem">
       <div class="hs-label">QB share of rushing yards</div>
       <div class="hs-big"><span data-m="f6.share_last" data-d="1">15.2</span>%</div>
       <p class="hs-cap">in <span data-m="meta.last_season">2025</span>, up from <span data-m="f6.share_first" data-d="1">11.8</span>% in <span data-m="meta.first_season">2015</span></p>
+      <a class="hs-play" href="#field-of-play" data-fop-play="scramble">▶ Run a QB scramble</a>
     </div>
   </div>
   <a class="scroll-cue" href="#summary">Scroll<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
@@ -99,7 +103,44 @@
       <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.games">3,028</div><div class="kpi-label">Games</div><div class="kpi-note"><span data-m="meta.teams">32</span> teams, regular season + playoffs</div></div>
       <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.seasons">11</div><div class="kpi-label">Seasons</div><div class="kpi-note"><span data-m="meta.first_season">2015</span>–<span data-m="meta.last_season">2025</span>; 16 games/team through 2020, 17 after</div></div>
       <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.off_yards" data-compact="1">2.17M</div><div class="kpi-label">Offensive yards</div><div class="kpi-note">Passing + rushing yards, all games</div></div>
-      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.td_scored">14,725</div><div class="kpi-label">Touchdowns scored</div><div class="kpi-note">Rushing + receiving + return TDs</div></div>
+      <div class="kpi card reveal" role="listitem"><div class="kpi-value" data-count="kpis.td_scored">14,725</div><div class="kpi-label">Touchdowns scored</div><div class="kpi-note">Rushing + receiving + return TDs</div><a class="kpi-link" href="#touchdown" data-play-td>▶ Watch a touchdown</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ MODEL 1 · FIELD OF PLAY -->
+<section class="fop" id="field-of-play" aria-labelledby="fop-h">
+  <div class="wrap">
+    <div class="fop-head">
+      <div>
+        <span class="eyebrow">Field of play · interactive</span>
+        <h2 id="fop-h">Every trend, run as a play</h2>
+      </div>
+      <p class="fop-intro">Pick a play and a season. The plays run on that season’s real league averages. A run gains exactly the league’s <strong>yards per carry</strong>. A completed pass gains exactly its <strong>yards per attempt</strong>. The faint lines behind a play are one route per pass attempt (or one lane per carry) in an average team-game. Hover a yard line, or click a player for that position’s numbers.</p>
+    </div>
+
+    <div class="fop-layout">
+      <div class="fop-stage" id="fop-stage">
+        <canvas id="fop-canvas" role="img" aria-label="Animated football play on a perspective NFL field"></canvas>
+        <div class="bug" aria-hidden="true"><span class="bug-brand">RUN IT BACK</span><span class="bug-season" id="fop-bug-season">2025</span><span class="bug-play" id="fop-bug-play">PASSING</span></div>
+        <div class="pcard" id="fop-pcard" role="dialog" aria-modal="false" aria-labelledby="fop-pcard-h" hidden></div>
+        <div class="fop-static-note">Motion is off: showing the play as a diagram</div>
+        <div class="fop-legend" aria-hidden="true"><span><i class="lg-los"></i>Line of scrimmage</span><span><i class="lg-fd"></i>First down</span><span><i class="lg-tg"></i>Target route</span></div>
+      </div>
+      <div class="lower-third" id="fop-card" aria-live="polite"></div>
+    </div>
+
+    <div class="fop-controls">
+      <div class="fop-plays" role="radiogroup" aria-label="Play type" id="fop-plays"></div>
+      <div class="fop-season">
+        <div class="fop-season-label"><span id="fop-season-metric">Season</span><span class="hint">hover to preview · click to lock</span></div>
+        <div class="fop-seasons" role="radiogroup" aria-label="Season" id="fop-seasons"></div>
+      </div>
+      <div class="fop-actions">
+        <button type="button" class="tool" id="fop-replay">↻ Replay</button>
+        <button type="button" class="tool" id="fop-pause" aria-pressed="false">❚❚ Pause</button>
+        <div class="fop-players" role="group" aria-label="Open a player card" id="fop-players"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -420,6 +461,30 @@
   </div>
 </section>
 
+<!-- ============================================================ MODEL 3 · TOUCHDOWN MOMENT -->
+<section class="moment" id="touchdown" aria-labelledby="td-h">
+  <div class="wrap moment-head">
+    <div>
+      <span class="eyebrow">The moment</span>
+      <h2 id="td-h">Six points, by the numbers</h2>
+    </div>
+    <div class="moment-actions">
+      <button type="button" class="btn btn-primary" id="td-play">▶ Play the touchdown</button>
+      <button type="button" class="tool dark" id="td-next">Next stat →</button>
+    </div>
+  </div>
+  <div class="moment-stage" id="td-stage">
+    <canvas id="td-canvas" role="img" aria-label="Animated touchdown pass into the end zone"></canvas>
+    <div class="td-flash" aria-hidden="true"></div>
+    <div class="td-overlay" id="td-overlay" aria-live="polite">
+      <div class="td-word" aria-hidden="true"><span>T</span><span>O</span><span>U</span><span>C</span><span>H</span><span>D</span><span>O</span><span>W</span><span>N</span></div>
+      <span class="sr-only">Touchdown.</span>
+      <div class="td-stat"><b id="td-stat-value"><span data-m="kpis.td_scored">14,725</span></b><span id="td-stat-label">touchdowns scored, 2015–2025, all games</span></div>
+    </div>
+  </div>
+  <p class="wrap moment-note">The play is illustrative. The statistic is real, from the same data as the rest of this report.</p>
+</section>
+
 <!-- ============================================================ METHODOLOGY -->
 <section class="method" id="methodology" aria-labelledby="method-h">
   <div class="wrap">
@@ -485,6 +550,7 @@
             <tr><td>Completion % / catch rate</td><td>Σ completions ÷ Σ attempts; Σ receptions ÷ Σ targets</td><td>Dashboard</td></tr>
             <tr><td>% change</td><td>(last ÷ first − 1) × 100</td><td>Throughout</td></tr>
             <tr><td>Draw-it score</td><td>mean of |your guess − actual| over the seasons you drew</td><td>“Your call”; head-to-head gap = yds/game difference × 181 games</td></tr>
+            <tr><td>Animated plays</td><td>run gain = season yards per carry; completion gain = season yards per attempt; faint traces = round(attempts or carries per team-game); sack tag = 1 in round(100 ÷ sack rate) dropbacks</td><td>Field of Play, play insets, touchdown moment. Formations and routes are illustrative; every number shown on them is data</td></tr>
             <tr><td>3D column height</td><td>value ÷ highest team value (from zero); zoomed: (value − min) ÷ (max − min)</td><td>Dashboard 3D stadium; exact values in tooltips and the table</td></tr>
           </tbody>
         </table>
@@ -555,6 +621,8 @@
 <script src="js/common.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/report.js"></script>
+<script src="js/playbook.js"></script>
+<script src="js/experience.js"></script>
 <script type="module">
   import { mountFootball } from "./js/three-football.js";
   const box = document.getElementById("hero-ball");

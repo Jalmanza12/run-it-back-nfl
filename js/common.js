@@ -175,6 +175,31 @@
   }
   document.addEventListener("DOMContentLoaded", initNav);
 
+  /* ---------------------------------------------------------------- site-wide motion switch
+     Default: off when the OS asks for reduced motion, otherwise on. The visitor's choice is remembered.
+     Scenes listen for the "rib:motion" event and switch to static diagrams when motion is off. */
+  let motionOn = !reduceMotion;
+  try { const saved = localStorage.getItem("rib-motion"); if (saved) motionOn = saved === "on"; } catch (e) { /* storage blocked */ }
+  document.documentElement.dataset.motion = motionOn ? "on" : "off";
+  const motion = {
+    get on() { return motionOn; },
+    set(on) {
+      motionOn = !!on;
+      document.documentElement.dataset.motion = motionOn ? "on" : "off";
+      try { localStorage.setItem("rib-motion", motionOn ? "on" : "off"); } catch (e) { /* ignore */ }
+      document.querySelectorAll(".motion-toggle").forEach((b) => { b.setAttribute("aria-pressed", String(motionOn)); b.querySelector(".mt-state").textContent = motionOn ? "On" : "Off"; });
+      window.dispatchEvent(new CustomEvent("rib:motion", { detail: { on: motionOn } }));
+    },
+  };
+  document.addEventListener("DOMContentLoaded", () => {
+    const cta = document.querySelector(".nav-links .nav-cta");
+    if (!cta) return;
+    const b = el("button", { type: "button", class: "motion-toggle", "aria-pressed": String(motionOn), title: "Turn animations on or off" },
+      el("span", { class: "mt-icon", "aria-hidden": "true" }), "Motion ", el("span", { class: "mt-state", text: motionOn ? "On" : "Off" }));
+    b.addEventListener("click", () => motion.set(!motionOn));
+    cta.parentElement.before(el("li", null, b));
+  });
+
   /** Fetch JSON with a readable error message if the page is opened from file:// */
   async function loadJSON(url) {
     const res = await fetch(url);
@@ -190,7 +215,7 @@
 
   window.RIB = {
     TEAM_COLORS, logoUrl, fmt, fmtSigned, compact, el, teamBadge, avatar, initials, posPill,
-    showTip, moveTip, hideTip, tipBody, countUp, observeReveals, reduceMotion, loadJSON, showLoadError,
+    showTip, moveTip, hideTip, tipBody, countUp, observeReveals, reduceMotion, loadJSON, showLoadError, motion,
     POS_COLORS: { QB: "#2563c9", RB: "#e0512b", WR: "#12a071", TE: "#e8a300" },
     NAVY: "#183257", RED: "#d22b3f", MUTED: "#b9c2d0",
   };
