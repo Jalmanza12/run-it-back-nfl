@@ -56,6 +56,7 @@ run-it-back-nfl/
 ├── css/
 │   ├── styles.css             Shared design system: tokens, nav, footer, cards, tooltips, ranked bars
 │   ├── report.css             Report-only layout (hero, findings, methodology)
+│   ├── experience.css         Football scenes: field of play, broadcast insets, touchdown moment
 │   └── dashboard.css          Dashboard-only layout (filters, controls, KPIs, team map, table)
 ├── js/
 │   ├── common.js              Shared helpers: nav, number formatting, team logos, headshots, tooltip, animations
@@ -63,6 +64,8 @@ run-it-back-nfl/
 │   ├── metrics.js             Dashboard calculation layer (stats, measures, filters, breakdowns). Runs in browser AND Node
 │   ├── report.js              Renders index.html from data/report_metrics.json (+ draw-it, toggles, head-to-head)
 │   ├── three-football.js      3D football model (Three.js) for the report hero
+│   ├── playbook.js            Football engine (Canvas 2D, no dependencies): perspective NFL field, players, ball, 10 data-driven plays
+│   ├── experience.js          Wires the football scenes to the story: Field of Play, play insets, Touchdown Moment, hero atmosphere
 │   ├── field3d.js             3D stadium: team columns on a football field (Three.js), used by the dashboard
 │   └── dashboard.js           Dashboard state, filters, controls and rendering
 ├── data/
@@ -77,8 +80,8 @@ run-it-back-nfl/
 │   ├── fetch_headshots.py     Builds data/player_headshots.csv from the nflverse players table
 │   ├── analysis.py            Computes all report metrics + dashboard data + audit report
 │   ├── audit_report.md        Dataset audit, assignment compliance, 14 candidate findings
-│   ├── verify.js              Accuracy check: recomputes every report number with js/metrics.js (609 checks)
-│   └── qa_browser.js          End-to-end QA in headless Chrome: filters, controls, table, 3D views, reset (124 checks)
+│   ├── verify.js              Accuracy check: recomputes every report number with js/metrics.js (632 checks)
+│   └── qa_browser.js          End-to-end QA in headless Chrome: filters, controls, table, 3D views, reset (151 checks)
 └── assets/
     └── favicon.svg
 ```
@@ -130,6 +133,21 @@ Every number in the text is a `<span data-m="…">` bound to `data/report_metric
 | **Charts (6)** | Breakdown (columns, or ranked bars with logos/headshots for team/opponent/player; click a bar to filter) · **3D stadium** (32 team columns on a 3D field, linked to every filter) · Trend by position · Single-game distribution (histogram with median/average) · Team map (32 logo tiles by division, sequential colour, click to filter) · Top-10 players |
 | **Table** | The numbers behind the breakdown for the current filters: sortable columns, search, pagination, totals row, CSV download |
 
+## Football scenes (interactive NFL experience)
+
+Three scenes share one visual language: a broadcast "skycam" view of a regulation NFL field, with yard lines, 1-yard hash marks at NFL width, numbers, end zones, goalposts, the **blue line of scrimmage** and the **yellow first-down line**. Players are stylized position markers (no photos). They all run on `js/playbook.js`, a small Canvas 2D engine with its own perspective camera and no dependencies. It was chosen over a third WebGL scene for speed: a frame draws in about 1 ms.
+
+| # | Scene | Where | Interaction | Data connection |
+|---|---|---|---|---|
+| 1 | **Field of Play** | Report, after the headline numbers | Pick a play (passing, deep shot, sack, giveaway, rushing, QB scramble, TE target, touchdown); **hover** a season to preview it, click to lock it; **hover** yard lines; **click players** (or use the position chips) for that position's numbers; mouse **parallax**; scrolling moves the camera; replay/pause | The run gains exactly that season's **yards per carry**; the completion gains exactly its **yards per attempt**; faint traces = pass attempts / carries per team-game; the season scrubber is a mini bar chart of the play's metric; the side card shows the value, the change vs 2015, a trend line and a link to the finding |
+| 2 | **Play insets** ("LIVE" broadcast inset) | Inside every finding, under its key numbers | Plays when scrolled into view; replay button; hovering the finding's key numbers highlights the routes | Each finding gets its play: passing (1), deep shot (2), **sack** (3), **interception → turnover** (4), **rushing lane** (5), **QB scramble** (6), TE seam (7), home offense (8), team offense (9), TD pass (10), long TD run (11). The lower-third shows the finding's statistic |
+| 3 | **Touchdown Moment** | Report, before the methodology | Plays once when scrolled into view; **Play the touchdown** replays; **Next stat** cycles; "Watch a touchdown" link on the KPI card | Snap → route → throw (brief slow motion at the catch) → catch in the end zone → celebration → "TOUCHDOWN" typography → a real statistic (total TDs, TDs per team-game, home vs away, Derrick Henry) |
+| + | Hero atmosphere | Report hero | — | Stadium light banks, beams, crowd flashes, drifting dust (canvas, paused off-screen) |
+
+**Motion & accessibility.** A **Motion On/Off** switch in the navigation (both pages) is remembered between visits, and it defaults to Off when the operating system asks for reduced motion. With Motion off, every scene becomes a static play diagram with the routes drawn in. All data stays visible in text, cards and tables. Play and season pickers are radio groups with arrow-key support, player cards open from buttons and close with Escape, and every canvas has a text description.
+
+**Performance.** Scenes render only while on screen and while the tab is visible (IntersectionObserver + `requestAnimationFrame`). Off-screen insets draw once and stay idle, and phones get a lighter detail level. No new libraries, videos or large images were added.
+
 ## 3D & interactive features
 
 | Where | Feature |
@@ -169,7 +187,7 @@ python3 -m http.server 8000
 python3 analysis/clean_nfl.py        # optional: re-download raw nflverse files and rebuild the cleaned CSV
 python3 analysis/fetch_headshots.py  # optional: rebuild player_headshots.csv
 python3 analysis/analysis.py         # rebuild report_metrics.json, dashboard_data.json, audit_report.md
-node analysis/verify.js              # accuracy check — expect "609 checks passed, 0 failed"
+node analysis/verify.js              # accuracy check — expect "632 checks passed, 0 failed"
 ```
 
 **Browser QA** (needs Google Chrome):
@@ -177,14 +195,14 @@ node analysis/verify.js              # accuracy check — expect "609 checks pas
 ```bash
 npm i --no-save puppeteer-core
 python3 -m http.server 8000 &
-node analysis/qa_browser.js http://localhost:8000   # expect "124 passed, 0 failed"
+node analysis/qa_browser.js http://localhost:8000   # expect "151 passed, 0 failed"
 ```
 
 ## Accuracy & reproducibility
 
 1. `analysis.py` (pandas) computes every report statistic from the CSV.
-2. `verify.js` recomputes each of them independently with the dashboard's JavaScript calculation layer (`js/metrics.js`) from `dashboard_data.json`. It also checks all 221 numbers written into `index.html`. **609 checks, 0 failures.**
-3. `qa_browser.js` operates the real dashboard in Chrome: it switches stats, measures and breakdowns, applies each filter, clicks bars to filter, sorts and searches the table, opens a shared link, checks all 32 columns of the 3D stadium, plays the draw-it game, and resets. It compares the numbers on screen with the report. **124 checks, 0 failures.**
+2. `verify.js` recomputes each of them independently with the dashboard's JavaScript calculation layer (`js/metrics.js`) from `dashboard_data.json`. It also checks all 222 numbers written into `index.html`. **632 checks, 0 failures.**
+3. `qa_browser.js` operates the real dashboard in Chrome: it switches stats, measures and breakdowns, applies each filter, clicks bars to filter, sorts and searches the table, opens a shared link, checks all 32 columns of the 3D stadium, plays the draw-it game, drives the football scenes (play and season pickers, player cards, data-driven gains, touchdown overlay, Motion switch, reduced motion), and resets. It compares the numbers on screen with the report. **151 checks, 0 failures.**
 
 ## GitHub Pages
 

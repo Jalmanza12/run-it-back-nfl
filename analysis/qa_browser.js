@@ -53,6 +53,65 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("report ranked charts rendered", await page.$$eval("#c-f9 .rk-row", (n) => n.length), 32);
   check("report number tables", await page.$$eval("details.numbers table", (n) => n.length), 11);
   check("report link to dashboard", await page.$eval(".nav-cta", (a) => a.getAttribute("href")), "dashboard.html");
+  /* ---- football scenes (field of play, docked play insets, touchdown moment) ---- */
+  await page.waitForFunction(() => window.__fop && window.__td && window.__tracker, { timeout: 30000 });
+  // reduced motion (emulated above) → Motion defaults to Off and scenes are static diagrams
+  check("reduced motion → Motion Off by default", await page.evaluate(() => document.documentElement.dataset.motion), "off");
+  check("reduced motion → field is a static diagram", await page.evaluate(() => window.__fop.stage.state().playing), false);
+  check("motion switch in nav", await page.$eval(".motion-toggle", (b) => b.getAttribute("aria-pressed")), "false");
+  await page.click(".motion-toggle"); await sleep(200);
+  check("motion switch → On", await page.evaluate(() => [document.documentElement.dataset.motion, window.__fop.stage.state().playing].join()), "on,true");
+  // plays are built from the data: the run gains exactly that season's yards per carry, the pass its yards per attempt
+  const lastS = R.meta.last_season, firstS = R.meta.first_season;
+  const at = (arr, s) => arr.find((d) => d.season === s).value;
+  const endDz = (play, s, id) => page.evaluate((p, s, id) => { const P = window.Playbook.buildPlay(p, s, window.__reportMetrics); const k = P.actors[id]; return k[k.length - 1].dz; }, play, s, id);
+  check(`rush play gains YPC ${firstS}`, nf(await endDz("rush", firstS, "RB"), 2), nf(at(R.f5.ypc, firstS), 2));
+  check(`rush play gains YPC ${lastS}`, nf(await endDz("rush", lastS, "RB"), 2), nf(at(R.f5.ypc, lastS), 2));
+  check(`pass play gains YPA ${lastS}`, nf(await endDz("pass", lastS, "Z"), 2), nf(at(R.f1.ypa, lastS), 2));
+  // field of play: default card, play switch, season lock, ghost traces, player card, keyboard
+  const card = () => page.$eval("#fop-card .lt-value", (b) => b.textContent);
+  check("field: default card = passing yds/team-game (f1)", await card(), nf(R.f1.last, 1));
+  await page.click('#fop-plays [data-play="rush"]'); await sleep(150);
+  check("field: rushing chip → rush play", await page.evaluate(() => window.__fop.stage.state().play), "rush");
+  check("field: rushing card (f5)", await card(), nf(R.f5.last, 1));
+  check("field: ghost lanes = carries/team-game", await page.evaluate(() => window.__fop.stage.state().ghosts), Math.round(at(R.f5.car_pg, lastS)));
+  await page.click(`#fop-seasons [data-season="${firstS}"]`); await sleep(150);
+  check(`field: season ${firstS} card`, await card(), nf(R.f5.first, 1));
+  check(`field: season ${firstS} ghosts`, await page.evaluate(() => window.__fop.stage.state().ghosts), Math.round(at(R.f5.car_pg, firstS)));
+  check("field: score bug season", await page.$eval("#fop-bug-season", (b) => b.textContent), String(firstS));
+  await page.evaluate(() => [...document.querySelectorAll("#fop-players .chip-sm")].find((b) => b.textContent === "QB").click()); await sleep(100);
+  check("field: QB card opens with season data", await page.$eval("#fop-pcard", (c) => !c.hidden && c.querySelector("dd").textContent), nf(at(R.f1.pass_ypg, firstS), 1));
+  await page.keyboard.press("Escape");
+  await page.focus('#fop-plays [data-play="rush"]'); await page.keyboard.press("ArrowRight"); await sleep(100);
+  check("field: arrow keys move between plays", await page.evaluate(() => window.__fop.stage.state().play), "scramble");
+  await page.click('#fop-plays [data-play="pass"]'); await page.click(`#fop-seasons [data-season="${lastS}"]`);
+  await page.evaluate(() => document.querySelector('[data-fop-play="rush"]').click()); await sleep(100);
+  check("hero 'Run the rushing play' link", await page.evaluate(() => window.__fop.stage.state().play), "rush");
+  // docked play insets: one per finding, only the visible one animates
+  check("play insets: one per finding", await page.$$eval(".play-inset", (n) => n.length), 11);
+  await page.evaluate(() => document.getElementById("f6").scrollIntoView({ block: "center" }));
+  await page.waitForFunction(() => window.__tracker.stages.f6.state().frames > 5, { timeout: 30000 }).catch(() => {}); // headless software rendering is slow
+  const fr = await page.evaluate(() => Object.fromEntries(Object.entries(window.__tracker.stages).map(([k, s]) => [k, s.state()])));
+  check("inset f6 runs the QB scramble", fr.f6.play, "scramble");
+  check("inset f6 animates while visible", fr.f6.frames > 5, true);
+  check("off-screen inset f1 stays idle", fr.f1.frames <= 3, true);
+  check("inset f6 lower-third stat", await page.$eval('#f6 .tr-lower', (x) => x.textContent), `QBs gained ${nf(R.f6.share_last, 1)}% of rush yds · ${lastS}`);
+  // touchdown moment: plays through to TOUCHDOWN, shows a real statistic, rotates stats
+  await page.evaluate(() => document.getElementById("touchdown").scrollIntoView());
+  await page.evaluate(() => window.__td.run());
+  await page.waitForFunction(() => window.__td.stage.state().events.includes("TOUCHDOWN"), { timeout: 60000 });
+  await sleep(300);
+  check("touchdown overlay shown", await page.$eval("#td-overlay", (o) => o.classList.contains("show")), true);
+  check("touchdown stat = total TDs scored", await page.$eval("#td-stat-value", (b) => b.textContent), nf(R.kpis.td_scored, 0));
+  await page.click("#td-next");
+  check("next stat = TDs per team-game (last season)", await page.$eval("#td-stat-value", (b) => b.textContent), nf(R.td.last, 2));
+  // motion off → every scene becomes a static diagram
+  await page.click(".motion-toggle"); await sleep(150);
+  check("motion Off → scenes static", await page.evaluate(() => [window.__fop.stage.state().playing, window.__td.stage.state().playing, window.__tracker.stages.f6.state().playing].join()), "false,false,false");
+  check("motion Off note shown", await page.$eval(".fop-static-note", (n) => getComputedStyle(n).display), "block");
+  await page.click(".motion-toggle");
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   // 3D football model
   await page.waitForFunction(() => document.querySelector("#hero-ball canvas"), { timeout: 30000 });
   check("hero 3D football canvas mounted", await page.$eval("#hero-ball", (b) => b.classList.contains("is-3d")), true);
@@ -225,7 +284,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check("reset: player input cleared", await page.$eval("#player-input", (i) => i.value), "");
   check("reset: season slider", await page.$eval("#season-out", (o) => o.textContent), "2015 – 2025");
   check("reset: controls", await page.evaluate(() => [...["stat-select", "measure-select", "dim-select"]].map((i) => document.getElementById(i).value).join(",")), "off_yds,ptg,season");
-  check("reset: pressed buttons", await page.$$eval('[aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()).join(",")), "Regular,QB,RB,WR,TE,All,All,Heights from zero,Values");
+  check("reset: pressed buttons", await page.$$eval('#dash [aria-pressed="true"]', (b) => b.map((x) => x.textContent.trim()).join(",")), "Regular,QB,RB,WR,TE,All,All,Heights from zero,Values");
 
   check("no console/page errors", errors.join(" | "), "");
   await browser.close();
